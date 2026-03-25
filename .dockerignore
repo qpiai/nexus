@@ -1,0 +1,49 @@
+# Dependencies & build outputs (rebuilt in Docker)
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Model files & quantization output
+output/
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# Python venvs (large, machine-specific)
+venvs/
+__pycache__/
+
+# Companion apps (not part of web platform container)
+nexus-android-v4/
+nexus-ios/
+nexus-desktop/
+nexus_mobile/
+
+# Git & IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Environment & secrets
+.env
+.env*.local
+
+# Docs (not needed at runtime)
+*.md
+LICENSE
+CONTRIBUTING.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+__tests__/

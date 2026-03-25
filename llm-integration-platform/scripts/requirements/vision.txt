@@ -1,0 +1,16 @@
+# YOLO vision training, inference, and export
+# Requires Python 3.10+
+ultralytics>=8.4
+opencv-python>=4.13
+opencv-python-headless>=4.13
+onnx>=1.20
+onnxruntime-gpu>=1.23
+onnxslim>=0.1
+pillow>=12.0
+matplotlib
+numpy
+torch
+torchvision
+scipy
+psutil
+pyyaml

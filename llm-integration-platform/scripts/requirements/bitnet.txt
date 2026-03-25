@@ -1,0 +1,9 @@
+# BitNet 1-bit quantization & inference
+transformers>=4.45
+huggingface-hub>=0.20
+accelerate>=0.25
+safetensors
+sentencepiece
+protobuf
+numpy
+torch

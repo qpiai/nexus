@@ -1,0 +1,24 @@
+services:
+  nexus:
+    build: .
+    ports:
+      - "7777:7777"
+    env_file:
+      - .env
+    environment:
+      # Set SETUP_VENVS to auto-install Python environments on first run:
+      #   gguf       — GGUF quantization only (~1GB, recommended)
+      #   gguf,awq   — GGUF + AWQ quantization
+      #   all        — all quantization methods (~3GB)
+      #   (empty)    — skip, server starts without ML capabilities
+      - SETUP_VENVS=${SETUP_VENVS:-gguf}
+    volumes:
+      - nexus-data:/app/data        # User accounts & sessions
+      - nexus-output:/app/output    # Quantized models & build artifacts
+      - nexus-venvs:/app/venvs      # Python venvs (persisted across restarts)
+    restart: unless-stopped
+
+volumes:
+  nexus-data:
+  nexus-output:
+  nexus-venvs:

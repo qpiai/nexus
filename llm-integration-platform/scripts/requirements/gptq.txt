@@ -1,0 +1,10 @@
+# GPTQ quantization & inference
+auto-gptq>=0.7
+transformers>=4.45
+huggingface-hub>=0.20
+accelerate>=0.25
+safetensors
+sentencepiece
+protobuf
+numpy
+datasets

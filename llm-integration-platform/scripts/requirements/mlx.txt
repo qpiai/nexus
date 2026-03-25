@@ -1,0 +1,9 @@
+# MLX quantization & inference (Apple Silicon only)
+mlx>=0.4
+mlx-lm>=0.4
+transformers>=4.45
+huggingface-hub>=0.20
+safetensors
+sentencepiece
+protobuf
+numpy

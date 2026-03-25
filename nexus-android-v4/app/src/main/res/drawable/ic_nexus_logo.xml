@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#FF0C0E1A"
+        android:pathData="M100,0 A100,100,0,1,1,100,200 A100,100,0,1,1,100,0Z"/>
+
+    <!-- "Q" letter in QpiAI blue -->
+    <path
+        android:fillColor="#FF7B9FC7"
+        android:pathData="M72,50 C72,50 58,52 50,65 C42,78 42,95 50,108 C58,121 72,125 80,125 C88,125 96,121 102,114 L112,126 L120,120 L108,106 C114,97 115,85 112,74 C108,60 96,50 82,50 C78,50 75,50 72,50Z M80,65 C90,65 97,72 100,82 C103,92 100,103 94,110 C88,117 80,118 74,114 C64,108 58,96 60,82 C62,72 70,65 80,65Z"/>
+
+    <!-- "π" (pi) symbol in QpiAI magenta -->
+    <path
+        android:fillColor="#FFD63384"
+        android:pathData="M108,70 L108,78 L140,78 L140,70Z M114,78 L114,120 L122,120 L122,78Z M130,78 L130,120 L138,120 L138,78Z"/>
+
+    <!-- "AI" subscript text -->
+    <path
+        android:fillColor="#FF8B8B9E"
+        android:pathData="M144,108 L148,120 L152,108 L155,108 L150,122 L146,122 L141,108Z M158,108 L158,122 L162,122 L162,108Z"/>
+</vector>
