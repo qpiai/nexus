@@ -7,7 +7,8 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Bot, X, Send, Trash2, Loader2, CheckCircle2, XCircle,
-  Zap, Brain, Rocket, Activity,
+  Zap, Brain, Rocket, Activity, Eye, ArrowRight, List, Square,
+  Sparkles, Database, Cpu, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -102,36 +103,114 @@ const PAGE_SUGGESTIONS: Record<string, { text: string; icon: ReactNode }[]> = {
   ],
 };
 
+// ---- Tool Display Helpers ----
+
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  quantize: <Zap className="h-3.5 w-3.5 text-violet-400" />,
+  quantize_status: <Activity className="h-3.5 w-3.5 text-violet-400" />,
+  stop_quantize: <Square className="h-3.5 w-3.5 text-red-400" />,
+  start_finetune: <Brain className="h-3.5 w-3.5 text-emerald-400" />,
+  finetune_status: <Activity className="h-3.5 w-3.5 text-emerald-400" />,
+  stop_finetune: <Square className="h-3.5 w-3.5 text-red-400" />,
+  vision_train: <Eye className="h-3.5 w-3.5 text-pink-400" />,
+  vision_export: <Layers className="h-3.5 w-3.5 text-purple-400" />,
+  navigate: <ArrowRight className="h-3.5 w-3.5 text-primary" />,
+  list_models: <List className="h-3.5 w-3.5 text-primary" />,
+  list_datasets: <Database className="h-3.5 w-3.5 text-primary" />,
+  list_finetune_models: <List className="h-3.5 w-3.5 text-primary" />,
+  list_vision_datasets: <List className="h-3.5 w-3.5 text-pink-400" />,
+  list_vision_models: <List className="h-3.5 w-3.5 text-pink-400" />,
+  list_devices: <Cpu className="h-3.5 w-3.5 text-primary" />,
+  list_deployments: <Rocket className="h-3.5 w-3.5 text-primary" />,
+  start_deployment: <Rocket className="h-3.5 w-3.5 text-primary" />,
+  deployment_status: <Activity className="h-3.5 w-3.5 text-primary" />,
+  active_tasks: <Activity className="h-3.5 w-3.5 text-amber-400" />,
+};
+
+const TOOL_NAMES: Record<string, string> = {
+  quantize: 'Quantize Model',
+  quantize_status: 'Quantization Status',
+  stop_quantize: 'Stop Quantization',
+  start_finetune: 'Start Fine-tuning',
+  finetune_status: 'Fine-tune Status',
+  stop_finetune: 'Stop Fine-tuning',
+  vision_train: 'Vision Training',
+  vision_export: 'Vision Export',
+  navigate: 'Navigate',
+  list_models: 'List Models',
+  list_datasets: 'List Datasets',
+  list_finetune_models: 'List Finetuned Models',
+  list_vision_datasets: 'List Vision Datasets',
+  list_vision_models: 'List Vision Models',
+  list_devices: 'List Devices',
+  list_deployments: 'List Deployments',
+  start_deployment: 'Deploy Model',
+  deployment_status: 'Deployment Status',
+  stop_deployment: 'Stop Deployment',
+  active_tasks: 'Active Tasks',
+};
+
+const LONG_RUNNING_TOOLS = ['quantize', 'start_finetune', 'vision_train'];
+
+function formatParams(params: Record<string, unknown>): string {
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== '');
+  if (entries.length === 0) return '';
+  return entries.map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`).join(' | ');
+}
+
 // ---- Action Card ----
 
 function ActionCard({ action }: { action: AgentActionResult }) {
   const resultStr = typeof action.result === 'string'
     ? action.result
     : JSON.stringify(action.result);
-  const displayResult = resultStr.length > 120 ? resultStr.slice(0, 120) + '...' : resultStr;
+  const displayResult = resultStr.length > 150 ? resultStr.slice(0, 150) + '...' : resultStr;
+  const isExecuting = action.result === 'Executing...';
+  const isLongRunning = LONG_RUNNING_TOOLS.includes(action.tool);
 
   return (
-    <div className="my-2 rounded-lg border border-border/50 bg-accent/30 p-2.5 text-xs">
+    <div className="my-2 rounded-xl border border-white/[0.06] bg-accent/20 p-3 text-xs overflow-hidden relative">
+      <div className="absolute top-0 left-0 right-0 h-0.5 nexus-gradient" />
       <div className="flex items-center gap-2">
-        <Zap className="h-3 w-3 text-primary shrink-0" />
-        <span className="font-medium text-foreground">{action.tool}</span>
-        {action.success ? (
-          <Badge variant="success" className="text-[10px] px-1.5 py-0 h-4">
+        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          {TOOL_ICONS[action.tool] || <Zap className="h-3.5 w-3.5 text-primary" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="font-semibold text-foreground">{TOOL_NAMES[action.tool] || action.tool}</span>
+          {action.params && Object.keys(action.params).length > 0 && (
+            <span className="text-[10px] text-muted-foreground block truncate">{formatParams(action.params)}</span>
+          )}
+        </div>
+        {isExecuting ? (
+          <div className="flex items-center gap-1 text-primary shrink-0">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="text-[10px]">Running</span>
+          </div>
+        ) : action.success ? (
+          <Badge variant="success" className="text-[10px] px-1.5 py-0 h-4 animate-scale-in shrink-0">
             <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-            Success
+            Done
           </Badge>
         ) : (
-          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">
+          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
             <XCircle className="h-2.5 w-2.5 mr-0.5" />
-            Failed
+            Error
           </Badge>
         )}
-        {action.duration > 0 && (
-          <span className="text-[10px] text-muted-foreground ml-auto">{action.duration}ms</span>
-        )}
       </div>
-      {displayResult && (
-        <div className="mt-1.5 text-muted-foreground break-all leading-relaxed">{displayResult}</div>
+      {!isExecuting && displayResult && (
+        <div className="mt-2 text-muted-foreground leading-relaxed bg-accent/30 rounded-lg p-2 break-all">
+          {displayResult}
+        </div>
+      )}
+      {isLongRunning && action.success && !isExecuting && (
+        <div className="mt-2 flex items-center gap-1.5 text-emerald-400 text-[10px] animate-celebrate">
+          <Sparkles className="h-3 w-3" />
+          Job started! Check the page for live progress.
+        </div>
+      )}
+      {action.duration > 0 && !isExecuting && (
+        <span className="text-[9px] text-muted-foreground/50 mt-1.5 block">{action.duration}ms</span>
       )}
     </div>
   );
@@ -384,13 +463,13 @@ export function AgentChatPanel() {
       <div
         className={cn(
           'fixed top-0 right-0 z-50 h-screen flex flex-col',
-          'bg-card/95 backdrop-blur-xl border-l border-border/40 shadow-2xl',
+          'bg-card/95 backdrop-blur-xl border-l border-white/[0.06] shadow-2xl',
           'w-full sm:w-80 md:w-80',
           'animate-slide-in-right'
         )}
       >
         {/* Header */}
-        <div className="relative flex h-14 items-center justify-between px-4 border-b border-border/30 shrink-0">
+        <div className="relative flex h-14 items-center justify-between px-4 border-b border-white/[0.04] shrink-0">
           <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg nexus-gradient flex items-center justify-center shadow-md shadow-primary/20">
@@ -427,29 +506,43 @@ export function AgentChatPanel() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {messages.length === 0 && !streaming && (
-            <div className="flex flex-col items-center gap-4 text-center p-4 pt-12">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Bot className="h-7 w-7 text-primary/60" />
+            <div className="flex flex-col items-center gap-4 text-center p-4 pt-8">
+              <div className="h-14 w-14 rounded-2xl nexus-gradient flex items-center justify-center shadow-lg shadow-primary/20">
+                <Bot className="h-7 w-7 text-white" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground mb-1">Nexus Agent</p>
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-                  I can help you quantize models, fine-tune, deploy, and manage your platform.
+                  Your AI copilot for model optimization.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+              <div className="w-full space-y-1 text-left px-2">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1.5">What I can do</p>
+                {[
+                  { icon: <Zap className="h-3 w-3 text-violet-400" />, text: 'Quantize & compress models' },
+                  { icon: <Brain className="h-3 w-3 text-emerald-400" />, text: 'Fine-tune with LoRA/QLoRA' },
+                  { icon: <Eye className="h-3 w-3 text-pink-400" />, text: 'Train vision models (YOLO)' },
+                  { icon: <Rocket className="h-3 w-3 text-primary" />, text: 'Deploy & manage models' },
+                ].map(cap => (
+                  <div key={cap.text} className="flex items-center gap-2 text-[11px] text-muted-foreground py-0.5">
+                    {cap.icon}
+                    {cap.text}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5 justify-center mt-1">
                 {suggestions.map(q => (
                   <button
                     key={q.text}
                     onClick={() => sendMessage(q.text)}
-                    className="flex items-center gap-1.5 text-[11px] bg-accent/50 hover:bg-accent border border-border/40 text-muted-foreground hover:text-foreground rounded-lg px-2.5 py-1.5 transition-colors"
+                    className="flex items-center gap-1.5 text-[11px] bg-accent/50 hover:bg-accent border border-white/[0.06] text-muted-foreground hover:text-foreground rounded-lg px-2.5 py-1.5 transition-colors"
                   >
                     {q.icon}
                     {q.text}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-4">
+              <p className="text-[10px] text-muted-foreground/50 mt-2">
                 Ctrl+. to toggle
               </p>
             </div>
@@ -467,14 +560,20 @@ export function AgentChatPanel() {
                   'max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed',
                   msg.role === 'user'
                     ? 'bg-primary/10 border border-primary/20 text-foreground'
-                    : 'bg-accent/30 border border-border/30 text-foreground'
+                    : 'bg-accent/30 border border-white/[0.04] text-foreground'
                 )}
               >
                 {msg.role === 'assistant' ? (
                   <>
                     <div className="whitespace-pre-wrap break-words text-[13px]">
                       {cleanDisplayText(msg.content)}
-                      {streaming && messages[messages.length - 1]?.id === msg.id && (
+                      {streaming && messages[messages.length - 1]?.id === msg.id && !msg.content && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                          Thinking...
+                        </span>
+                      )}
+                      {streaming && messages[messages.length - 1]?.id === msg.id && msg.content && (
                         <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse ml-1 align-middle" />
                       )}
                     </div>
@@ -496,7 +595,7 @@ export function AgentChatPanel() {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="border-t border-border/30 p-3 shrink-0">
+        <form onSubmit={handleSubmit} className="border-t border-white/[0.04] p-3 shrink-0">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
@@ -505,7 +604,7 @@ export function AgentChatPanel() {
               onKeyDown={handleKeyDown}
               placeholder="Ask anything..."
               rows={1}
-              className="flex-1 resize-none rounded-xl border border-border/40 bg-[var(--input-bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[40px] max-h-[120px]"
+              className="flex-1 resize-none rounded-xl border border-white/[0.06] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[40px] max-h-[120px]"
               disabled={streaming}
             />
             <Button

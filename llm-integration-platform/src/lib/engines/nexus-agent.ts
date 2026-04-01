@@ -1,6 +1,7 @@
 import { callGemini, callGeminiStream } from './gemini';
 import { AgentAction, AgentActionResult, AgentChatMessage } from '../types';
 import { getModelNameList, METHOD_BITS } from '../constants';
+import { COOKIE_NAME } from '../auth';
 
 // ---- Tool Definitions ----
 
@@ -11,6 +12,7 @@ interface ToolDef {
   endpoint: string;
   params: Record<string, string>;
   sseStream?: boolean;
+  statusEndpoint?: string;
 }
 
 const TOOL_DEFINITIONS: ToolDef[] = [
@@ -27,11 +29,12 @@ const TOOL_DEFINITIONS: ToolDef[] = [
     method: 'POST',
     endpoint: '/api/quantization/run',
     params: {
-      model: 'Model name from catalog (e.g. "SmolLM2 135M", "Qwen 2.5 3B", "Qwen 3 0.6B")',
+      model: 'Model name from catalog (e.g. "SmolLM2 135M", "SmolLM3 3B", "Qwen 3 0.6B", "Gemma 3 1B")',
       method: 'Quantization method: GGUF, AWQ, GPTQ, BitNet, MLX, or FP16',
       bits: 'Bit precision: 2, 3, 4, 5, 8, or 16',
     },
     sseStream: true,
+    statusEndpoint: '/api/quantization/status',
   },
   {
     name: 'quantize_status',
@@ -55,9 +58,10 @@ const TOOL_DEFINITIONS: ToolDef[] = [
     params: {
       model: 'HuggingFace model ID (e.g. "Qwen/Qwen2.5-0.5B-Instruct")',
       dataset: 'Dataset name (e.g. "yahma/alpaca-cleaned")',
-      config: 'Config object with finetuningType, epochs, learningRate, etc.',
+      config: 'Optional config: {finetuningType: "qlora"|"lora"|"full", epochs: number, learningRate: number, batchSize: number}. Defaults are fine for most cases.',
     },
     sseStream: true,
+    statusEndpoint: '/api/finetune/status',
   },
   {
     name: 'finetune_status',
@@ -120,15 +124,16 @@ const TOOL_DEFINITIONS: ToolDef[] = [
   },
   {
     name: 'vision_train',
-    description: 'Start YOLO vision model training',
+    description: 'Start YOLO vision model training. Use list_vision_datasets first to find dataset paths.',
     method: 'POST',
     endpoint: '/api/vision/train',
     params: {
-      model: 'YOLO model (e.g. "yolo26n-det", "yolo11n-seg")',
-      dataset: 'Dataset name',
+      model: 'YOLO model ID (e.g. "yolo26n.pt", "yolo26s.pt", "yolo11n.pt", "yolo26n-seg.pt", "yolo11n-seg.pt")',
+      dataset: 'Full path to prepared dataset YAML (get from list_vision_datasets)',
       epochs: 'Training epochs (default: 50)',
     },
     sseStream: true,
+    statusEndpoint: '/api/vision/train',
   },
   {
     name: 'list_vision_datasets',
@@ -220,7 +225,10 @@ ${modelNames.join(', ')}
 5. Use exact model names from the catalog above.
 6. For multi-step requests, execute the first step and explain next steps.
 7. Never fabricate data. If you don't know current state, use a list/status tool first.
-8. Keep action params as JSON. Use string values for all params.`;
+8. Keep action params as JSON. Use string values for all params.
+9. For SSE streaming tools (quantize, start_finetune, vision_train), the action starts the job and returns immediately. Always follow up with [NAVIGATE:...] so the user can see real-time progress on the relevant page.
+10. Before starting quantization, verify the model name matches the catalog exactly. Common names: "SmolLM2 135M", "Qwen 3 0.6B", "Gemma 3 1B".
+11. For vision_train, you need a dataset YAML path. Use list_vision_datasets first to find available datasets.`;
 }
 
 // ---- Action Parser ----
@@ -278,6 +286,13 @@ async function executeAction(
     'Cookie': cookies,
   };
 
+  // Extract auth token and pass as Bearer header — more reliable than
+  // raw Cookie forwarding for server-side fetch to localhost
+  const tokenMatch = cookies.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+  if (tokenMatch) {
+    headers['Authorization'] = `Bearer ${tokenMatch[1]}`;
+  }
+
   try {
     let url = `${BASE_URL}${tool.endpoint}`;
     const fetchOpts: RequestInit = { headers };
@@ -303,40 +318,37 @@ async function executeAction(
     clearTimeout(timeout);
 
     if (tool.sseStream) {
-      // Read first few events to confirm start, then close
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let events = 0;
-      let summary = 'Process started';
-
-      if (reader) {
-        try {
-          while (events < 5) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                events++;
-                try {
-                  const data = JSON.parse(line.slice(6));
-                  if (data.message) summary = data.message;
-                  if (data.error) {
-                    return { tool: action.tool, params: action.params, success: false, result: data.error, duration: Date.now() - start };
-                  }
-                } catch { /* skip */ }
-              }
-            }
-          }
-        } finally {
-          reader.cancel().catch(() => {});
-        }
+      // Fire-and-forget: confirm job started (HTTP 200), don't consume the stream
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        return { tool: action.tool, params: action.params, success: false, result: err.error || `Failed with status ${res.status}`, duration: Date.now() - start };
       }
 
-      return { tool: action.tool, params: action.params, success: true, result: summary, duration: Date.now() - start };
+      // Don't read or cancel the stream body — the backend child process runs
+      // independently in-memory. Let the response be garbage collected naturally.
+      // (Reading/canceling can trigger cancel() handlers that kill the process.)
+
+      // Poll the corresponding status endpoint to get actual state
+      if (tool.statusEndpoint) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const statusRes = await fetch(`${BASE_URL}${tool.statusEndpoint}`, { headers });
+          if (statusRes.ok) {
+            const status = await statusRes.json();
+            if (status.error) {
+              return { tool: action.tool, params: action.params, success: false, result: status.error, duration: Date.now() - start };
+            }
+            const summary = status.running
+              ? `Job started successfully.${status.model ? ` Model: ${status.model}.` : ''}${status.progress > 0 ? ` Progress: ${Math.round(status.progress * 100)}%.` : ''} Navigate to the page to monitor progress.`
+              : status.done
+                ? 'Job completed!'
+                : 'Job submitted.';
+            return { tool: action.tool, params: action.params, success: true, result: summary, duration: Date.now() - start };
+          }
+        } catch { /* fall through */ }
+      }
+
+      return { tool: action.tool, params: action.params, success: true, result: 'Job started. Navigate to the page to monitor progress.', duration: Date.now() - start };
     }
 
     // Standard JSON response

@@ -114,7 +114,7 @@ export function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex h-14 md:h-16 items-center border-b border-border/40 px-4">
+      <div className="flex h-14 md:h-16 items-center border-b border-white/[0.04] px-4">
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-white/95 dark:bg-white/10 flex items-center justify-center shadow-lg shadow-primary/20 backdrop-blur-sm overflow-hidden">
@@ -201,7 +201,7 @@ export function Sidebar() {
         {/* Admin nav link — only visible to admins */}
         {userInfo?.role === 'admin' && (
           <>
-            <div className="my-1 border-t border-border/30" />
+            <div className="my-1 border-t border-white/[0.04]" />
             <Link
               href="/admin"
               onClick={closeMobile}
@@ -235,7 +235,7 @@ export function Sidebar() {
         {/* Running Tasks Indicator */}
         {activeTasks.length > 0 && (
           <>
-            <div className="my-2 border-t border-border/30" />
+            <div className="my-2 border-t border-white/[0.04]" />
             {(!collapsed || mobileOpen) ? (
               <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1">Running Tasks</p>
@@ -343,7 +343,7 @@ export function Sidebar() {
 
         {/* Status */}
         {(!collapsed || mobileOpen) && (
-          <div className="rounded-xl border border-border/40 bg-accent/50 p-3.5 relative overflow-hidden">
+          <div className="rounded-xl border border-white/[0.04] bg-accent/50 p-3.5 relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
             <div className="flex items-center gap-2 mb-1.5">
               <div className="relative">
@@ -364,7 +364,7 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen bg-card transition-all duration-300 hidden md:block border-r border-border/40',
+          'fixed left-0 top-0 z-40 h-screen bg-card transition-all duration-300 hidden md:block border-r border-white/[0.04]',
           collapsed ? 'w-16' : 'w-60'
         )}
       >
@@ -382,7 +382,7 @@ export function Sidebar() {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 h-screen w-72 bg-card transition-transform duration-300 ease-out md:hidden border-r border-border/40 shadow-2xl',
+          'fixed left-0 top-0 z-50 h-screen w-72 bg-card transition-transform duration-300 ease-out md:hidden border-r border-white/[0.04] shadow-2xl',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

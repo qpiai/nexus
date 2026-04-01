@@ -15,9 +15,6 @@ PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 GGUF_VENV = os.path.join(PROJECT_DIR, "venvs", "gguf")
 if os.path.isdir(GGUF_VENV):
     sys.path.insert(0, GGUF_VENV)
-    site_pkg = os.path.join(GGUF_VENV, "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages")
-    if os.path.isdir(site_pkg):
-        sys.path.insert(0, site_pkg)
 
 
 def emit(msg_type, message, progress=None, **kw):

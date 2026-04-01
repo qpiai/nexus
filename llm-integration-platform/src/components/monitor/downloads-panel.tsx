@@ -25,10 +25,30 @@ interface DownloadItem {
 
 const DOWNLOADS: DownloadItem[] = [
   {
+    id: 'android-v7',
+    platform: 'android',
+    label: 'Android v7 (Latest)',
+    description: 'Full-featured Android client with login/QR pairing, on-device agent system (ReAct + 9 tools), VLM chat, TFLite vision detection & segmentation, llama.cpp JNI, and offline mode.',
+    filename: 'nexus-v7.apk',
+    url: '/nexus-v7.apk',
+    version: '7.0.0',
+    sizeMB: 28,
+    icon: <Smartphone className="h-6 w-6" />,
+    color: 'text-emerald-400',
+    instructions: [
+      'Download the APK file to your Android device',
+      'Open Settings > Security > Enable "Install from Unknown Sources"',
+      'Open the downloaded APK and tap Install',
+      'Sign in with your email/password, scan a QR code, or continue offline',
+      'Download a GGUF model and start chatting — toggle Agent mode for tool-augmented reasoning',
+      'For Vision: open Vision tab, download a TFLite model, and run detection or segmentation',
+    ],
+  },
+  {
     id: 'android-v4',
     platform: 'android',
     label: 'Android v4 (VLM + Vision OD/Seg)',
-    description: 'Latest Android app with VLM chat, on-device TFLite object detection & segmentation, server-side vision inference, confidence/IoU controls, and llama.cpp JNI.',
+    description: 'Android app with VLM chat, on-device TFLite object detection & segmentation, server-side vision inference, and llama.cpp JNI.',
     filename: 'nexus-v4.apk',
     url: '/nexus-v4.apk',
     version: '4.0.0',
@@ -39,63 +59,26 @@ const DOWNLOADS: DownloadItem[] = [
       'Download the APK file to your Android device',
       'Open Settings > Security > Enable "Install from Unknown Sources"',
       'Open the downloaded APK and tap Install',
-      'Launch Nexus, enter your server URL or scan QR code to connect',
+      'Launch Nexus, enter your server URL and connect',
       'For VLM: select a VLM model, attach images via the clip button, and chat',
       'For Vision: open Vision tab, download a TFLite model, and run detection or segmentation',
-    ],
-  },
-  {
-    id: 'android-v3',
-    platform: 'android',
-    label: 'Android v3 (VLM + Vision)',
-    description: 'Android app with VLM chat support, vision inference, and llama.cpp JNI. Send images to vision language models.',
-    filename: 'nexus-v3.apk',
-    url: '/nexus-v3.apk',
-    version: '3.0.0',
-    sizeMB: 25,
-    icon: <Smartphone className="h-6 w-6" />,
-    color: 'text-emerald-400',
-    instructions: [
-      'Download the APK file to your Android device',
-      'Open Settings > Security > Enable "Install from Unknown Sources"',
-      'Open the downloaded APK and tap Install',
-      'Launch Nexus, enter your server URL, and select a model to start chatting',
-      'For VLM: select an FP16 VLM model, then use the attach button to send images',
-    ],
-  },
-  {
-    id: 'android-v2',
-    platform: 'android',
-    label: 'Android v2 (Material You)',
-    description: 'Android app with Material Design 3 and dynamic theming.',
-    filename: 'nexus-v2.apk',
-    url: '/nexus-v2.apk',
-    version: '2.0.0',
-    sizeMB: 17,
-    icon: <Smartphone className="h-6 w-6" />,
-    color: 'text-emerald-400',
-    instructions: [
-      'Download the APK file to your Android device',
-      'Open Settings > Security > Enable "Install from Unknown Sources"',
-      'Open the downloaded APK and tap Install',
-      'Launch Nexus and enter your server URL to connect',
     ],
   },
   {
     id: 'windows',
     platform: 'windows',
     label: 'Windows (Portable)',
-    description: 'Portable Windows desktop client. No installation required — extract and run.',
+    description: 'Portable Windows desktop client with login support. No installation required — extract and run.',
     filename: 'nexus-desktop-windows.tar.gz',
     url: '/nexus-desktop-windows.tar.gz',
     version: '1.1.0',
-    sizeMB: 111,
+    sizeMB: 480,
     icon: <Monitor className="h-6 w-6" />,
     color: 'text-blue-400',
     instructions: [
       'Download and extract the .tar.gz archive',
-      'Open the extracted folder and run "Nexus Client.exe"',
-      'Enter your Nexus server URL to connect',
+      'Open the win-unpacked folder and run "QpiAI Nexus.exe"',
+      'Enter your Nexus server URL, then log in with your dashboard credentials',
       'Download models and start local inference or use server mode',
     ],
   },
@@ -103,18 +86,18 @@ const DOWNLOADS: DownloadItem[] = [
     id: 'linux',
     platform: 'linux',
     label: 'Linux (AppImage)',
-    description: 'Universal Linux package. Works on Ubuntu, Fedora, Arch, and most distributions.',
+    description: 'Universal Linux package with login support. Works on Ubuntu, Fedora, Arch, and most distributions.',
     filename: 'nexus-desktop-linux.AppImage',
     url: '/nexus-desktop-linux.AppImage',
     version: '1.1.0',
-    sizeMB: 104,
+    sizeMB: 462,
     icon: <HardDrive className="h-6 w-6" />,
     color: 'text-orange-400',
     instructions: [
       'Download the AppImage file',
       'Make it executable: chmod +x nexus-desktop-linux.AppImage',
       'Double-click or run ./nexus-desktop-linux.AppImage',
-      'Enter your Nexus server URL to connect',
+      'Enter your Nexus server URL, then log in with your dashboard credentials',
     ],
   },
   {
@@ -322,7 +305,7 @@ export function DownloadsPanel() {
                   </div>
 
                   {expandedId === item.id && (
-                    <div className="mt-4 pt-4 border-t border-border/40">
+                    <div className="mt-4 pt-4 border-t border-white/[0.06]">
                       <p className="text-xs font-medium text-muted-foreground mb-2">Installation Steps:</p>
                       <ol className="space-y-1.5">
                         {item.instructions.map((step, i) => (
@@ -358,7 +341,7 @@ export function DownloadsPanel() {
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 mt-4">
-            <div className="p-4 rounded-xl bg-background/50 border border-border/40">
+            <div className="p-4 rounded-xl bg-background/50 border border-white/[0.06]">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Build from Source (Physical Device)</p>
               <ol className="space-y-1.5 text-xs text-muted-foreground">
                 <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">1.</span>Clone the <code className="text-[10px] bg-accent px-1 rounded">nexus-ios</code> repo and run <code className="text-[10px] bg-accent px-1 rounded">xcodegen generate</code></li>
@@ -367,7 +350,7 @@ export function DownloadsPanel() {
                 <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">4.</span>Models download from HuggingFace on first launch</li>
               </ol>
             </div>
-            <div className="p-4 rounded-xl bg-background/50 border border-border/40">
+            <div className="p-4 rounded-xl bg-background/50 border border-white/[0.06]">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Requirements</p>
               <ul className="space-y-1.5 text-xs text-muted-foreground">
                 <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />Xcode 16.0+ / Swift 6.0</li>
@@ -382,8 +365,8 @@ export function DownloadsPanel() {
 
       {/* Footer info */}
       <div className="text-center text-xs text-muted-foreground space-y-1 pb-8">
-        <p>All desktop clients are v1.1.0 with authenticated server connections.</p>
-        <p>Built with Electron 33 &middot; Android v4 (VLM+Vision OD/Seg) &middot; iOS via llama.cpp + Apple MLX</p>
+        <p>All desktop clients are v1.1.0 with email/password login and on-device inference.</p>
+        <p>Built with Electron 33 &middot; Android v7 (Agent+VLM+Vision) &middot; iOS via llama.cpp + Apple MLX</p>
       </div>
     </div>
   );

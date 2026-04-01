@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import QRCode from 'qrcode';
-import { getUserFromRequest, createDevicePairingToken } from '@/lib/auth';
+import { getUserFromRequest, createPairingToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,34 +9,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const pairingToken = await createDevicePairingToken(user.userId);
+  // Generate a short-lived pairing token (5 min)
+  const token = await createPairingToken({
+    id: user.userId,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  });
 
-    // Derive server URL from headers (cloudflared sets x-forwarded-host)
-    const forwardedHost = req.headers.get('x-forwarded-host');
-    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-    const host = forwardedHost || req.headers.get('host') || 'localhost:6001';
-    const proto = forwardedHost ? forwardedProto : 'http';
-    const serverUrl = `${proto}://${host}`;
+  // Determine the server's public URL
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  const host = forwardedHost || req.headers.get('host') || 'localhost:6001';
+  const proto = forwardedHost ? forwardedProto : (host.startsWith('localhost') ? 'http' : 'https');
+  const serverUrl = `${proto}://${host}`;
 
-    const payload = JSON.stringify({
-      url: serverUrl,
-      token: pairingToken,
-      ts: Math.floor(Date.now() / 1000),
-    });
+  // Return JSON that the dashboard can render as a QR code
+  const qrData = JSON.stringify({ url: serverUrl, token });
 
-    const qr = await QRCode.toDataURL(payload, {
-      width: 280,
-      margin: 2,
-      color: { dark: '#f0f0f5', light: '#00000000' },
-      errorCorrectionLevel: 'M',
-    });
-
-    return NextResponse.json({ qr, url: serverUrl, expiresIn: 300 });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Failed to generate QR code', details: String(err) },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    qrData,
+    serverUrl,
+    token,
+    expiresIn: 300,
+  });
 }

@@ -259,6 +259,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
   };
 
   const goToQuantize = () => {
+    sessionStorage.setItem('nexus-autostart-quantize', 'true');
     if (onSwitchTab) {
       onSwitchTab('quantize');
     } else {
@@ -395,7 +396,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
 
       {/* Message Stream */}
       <Card className="min-h-[400px] flex flex-col animate-fade-in-up">
-        <CardHeader className="border-b border-border/40">
+        <CardHeader className="border-b border-white/[0.06]">
           <CardTitle className="text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center"><Sparkles className="h-3.5 w-3.5 text-primary" /></div>
@@ -508,7 +509,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
 
             {/* Override Panel */}
             {actionMode === 'override' && (
-              <div className="rounded-xl border border-border/60 p-5 space-y-4 bg-accent/30 animate-fade-in-up">
+              <div className="rounded-xl border border-white/[0.06] p-5 space-y-4 bg-accent/30 animate-fade-in-up">
                 <p className="text-sm font-semibold">Custom Configuration</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
                   <div>
@@ -559,7 +560,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
 
             {/* Refine Panel */}
             {actionMode === 'refine' && (
-              <div className="rounded-xl border border-border/60 p-5 space-y-3 bg-accent/30 animate-fade-in-up">
+              <div className="rounded-xl border border-white/[0.06] p-5 space-y-3 bg-accent/30 animate-fade-in-up">
                 <p className="text-sm font-semibold">Give the agents feedback</p>
                 <Textarea
                   value={feedbackText}
@@ -589,7 +590,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
                   {/* Finetune Option */}
                   <button
                     onClick={goToFinetune}
-                    className="group relative rounded-xl border border-border/60 p-5 text-left hover:border-pink-500/40 hover:bg-pink-500/5 transition-all duration-200"
+                    className="group relative rounded-xl border border-white/[0.06] p-5 text-left hover:border-pink-500/40 hover:bg-pink-500/5 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className="h-10 w-10 rounded-xl bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
@@ -609,7 +610,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
                   {/* Quantize Option */}
                   <button
                     onClick={goToQuantize}
-                    className="group relative rounded-xl border border-border/60 p-5 text-left hover:border-violet-500/40 hover:bg-violet-500/5 transition-all duration-200"
+                    className="group relative rounded-xl border border-white/[0.06] p-5 text-left hover:border-violet-500/40 hover:bg-violet-500/5 transition-all duration-200"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div className="h-10 w-10 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">

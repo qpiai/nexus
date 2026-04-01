@@ -23,21 +23,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
   }
 
-  // User-scoped output dir, with admin fallback to root
-  const isAdmin = user.role === 'admin';
+  // User-scoped output dir, with fallback to shared root dir for all users
   const userOutputDir = path.resolve(process.cwd(), 'output', user.userId);
+  const rootOutputDir = path.resolve(process.cwd(), 'output');
   let filePath = path.join(userOutputDir, sanitized);
 
-  if (!fs.existsSync(filePath) && isAdmin) {
-    const rootOutputDir = path.resolve(process.cwd(), 'output');
+  if (!fs.existsSync(filePath)) {
     filePath = path.join(rootOutputDir, sanitized);
   }
 
   // Validate resolved path is under allowed directories
   const resolved = path.resolve(filePath);
   const userBase = path.resolve(process.cwd(), 'output', user.userId);
-  const rootBase = path.resolve(process.cwd(), 'output');
-  if (!resolved.startsWith(userBase) && !(isAdmin && resolved.startsWith(rootBase))) {
+  if (!resolved.startsWith(userBase) && !resolved.startsWith(rootOutputDir)) {
     return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
   }
 

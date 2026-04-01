@@ -194,6 +194,6 @@ export function ensureAdminUser(): void {
   const adminByName = users.find(u => u.name.toLowerCase() === 'admin' && u.passwordHash);
   if (adminByName) return;
 
-  // Create a dedicated admin account (login: admin / qpiai-nexus)
-  createUser('admin@nexus.local', 'qpiai-nexus', 'admin', 'local', undefined, 'admin');
+  // Create a dedicated admin account (login: admin / admin-nexus-qpi)
+  createUser('admin@nexus.local', 'admin-nexus-qpi', 'admin', 'local', undefined, 'admin');
 }

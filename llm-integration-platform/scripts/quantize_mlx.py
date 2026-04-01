@@ -30,18 +30,10 @@ def main():
     parser = argparse.ArgumentParser(description="MLX Quantization")
     parser.add_argument("--model", "--model-id", required=True, dest="model_id",
                         help="HuggingFace model repo ID")
-    parser.add_argument("--bits", type=int, default=4, choices=[4, 8])
+    parser.add_argument("--bits", type=int, default=4, choices=[2, 3, 4, 5, 6, 8])
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--hf-token", default=None)
     args = parser.parse_args()
-
-    # Check platform FIRST before any MLX imports
-    import platform
-    if platform.system() != "Darwin" or platform.machine() not in ("arm64", "aarch64"):
-        emit("error", message="MLX quantization requires Apple Silicon (M1/M2/M3/M4/M5). "
-             f"This server is running {platform.system()} {platform.machine()}. "
-             "Use GGUF, AWQ, or GPTQ instead.")
-        sys.exit(1)
 
     emit("progress", message="Starting MLX quantization...", progress=0.0)
 

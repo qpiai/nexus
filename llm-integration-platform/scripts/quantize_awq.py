@@ -16,9 +16,6 @@ PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 AWQ_VENV = os.path.join(PROJECT_DIR, "venvs", "awq")
 if os.path.isdir(AWQ_VENV):
     sys.path.insert(0, AWQ_VENV)
-    site_pkg = os.path.join(AWQ_VENV, "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages")
-    if os.path.isdir(site_pkg):
-        sys.path.insert(0, site_pkg)
 
 def emit(msg_type, message, progress=None):
     """Emit a JSON progress line to stdout."""
@@ -57,7 +54,7 @@ def main():
     import gc
     gc.collect()
     torch.cuda.empty_cache()
-    gpu_mem = torch.cuda.get_device_properties(0).total_mem / (1024**3)
+    gpu_mem = torch.cuda.get_device_properties(0).total_memory / (1024**3)
     emit("progress", f"GPU: {torch.cuda.get_device_name(0)} ({gpu_mem:.0f} GB)", 0.06)
 
     # Step 2: Download and load model

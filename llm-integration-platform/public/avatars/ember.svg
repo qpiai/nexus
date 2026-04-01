@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="ebg" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="url(#ebg)"/>
+  <path d="M100 38 C75 70, 55 90, 58 120 C60 145, 78 165, 100 168 C122 165, 140 145, 142 120 C145 90, 125 70, 100 38Z" fill="white" opacity="0.12"/>
+  <path d="M100 58 C82 82, 68 98, 70 118 C72 138, 84 152, 100 154 C116 152, 128 138, 130 118 C132 98, 118 82, 100 58Z" fill="white" opacity="0.12"/>
+  <path d="M100 78 C90 92, 82 104, 84 116 C85 128, 92 138, 100 140 C108 138, 115 128, 116 116 C118 104, 110 92, 100 78Z" fill="white" opacity="0.15"/>
+  <ellipse cx="100" cy="118" rx="10" ry="14" fill="white" opacity="0.25"/>
+  <circle cx="100" cy="114" r="5" fill="white" opacity="0.6"/>
+  <circle cx="72" cy="52" r="4" fill="white" opacity="0.12"/>
+  <circle cx="138" cy="60" r="3" fill="white" opacity="0.1"/>
+  <circle cx="52" cy="160" r="6" fill="white" opacity="0.08"/>
+  <circle cx="155" cy="155" r="5" fill="white" opacity="0.08"/>
+</svg>

@@ -109,23 +109,23 @@ function scanOutputDir(outputDir: string, models: ModelInfo[]) {
 
 export async function GET(req: NextRequest) {
   const user = await getUserFromRequest(req);
-  const userId = user?.userId || 'default';
-  const isAdmin = user?.role === 'admin';
+  const userId = user?.userId;
   const models: ModelInfo[] = [];
 
-  // Scan user-specific output dir
-  const userOutputDir = path.resolve(process.cwd(), 'output', userId);
-  scanOutputDir(userOutputDir, models);
+  // Scan user-specific output dir if authenticated
+  if (userId) {
+    const userOutputDir = path.resolve(process.cwd(), 'output', userId);
+    scanOutputDir(userOutputDir, models);
+  }
 
-  // Only admins see legacy root-level models (data isolation for regular users)
-  if (isAdmin) {
-    const rootOutputDir = path.resolve(process.cwd(), 'output');
-    const rootModels: ModelInfo[] = [];
-    scanOutputDir(rootOutputDir, rootModels);
-    const userFiles = new Set(models.map(m => m.file));
-    for (const m of rootModels) {
-      if (!userFiles.has(m.file)) models.push(m);
-    }
+  // All users (including unauthenticated and device-token users) can see
+  // root-level shared models. This endpoint is public per middleware.
+  const rootOutputDir = path.resolve(process.cwd(), 'output');
+  const rootModels: ModelInfo[] = [];
+  scanOutputDir(rootOutputDir, rootModels);
+  const userFiles = new Set(models.map(m => m.file));
+  for (const m of rootModels) {
+    if (!userFiles.has(m.file)) models.push(m);
   }
 
   // Sort by method then name

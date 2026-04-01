@@ -19,6 +19,8 @@ export interface DeviceInput {
   gpuInfo: string;
   storageGB: number;
   deviceType: 'mobile' | 'laptop' | 'desktop' | 'edge' | 'server';
+  gpuVRAMGB?: number;
+  cpuCores?: number;
 }
 
 // --- Hardware Types ---
@@ -97,6 +99,15 @@ export interface AgentWorkflow {
   finalRecommendation?: QuantizationConfig;
   startedAt?: number;
   completedAt?: number;
+  scoredModels?: Array<{
+    modelName: string;
+    compositeScore: number;
+    fitLevel: string;
+    estimatedTPS: number;
+    method: string;
+    bitsPerWeight: number;
+    estimatedMemoryGB: number;
+  }>;
 }
 
 // --- Agent Run Request ---
@@ -394,6 +405,20 @@ export interface VisionTrainResult {
   classes: string[];
 }
 
+// --- Vision Agent Types ---
+export interface VisionUseCase {
+  description: string;          // "Detect cars in parking lot footage"
+  targetDevice?: string;        // "Raspberry Pi", "iPhone 15", "NVIDIA Jetson"
+  task?: VisionTask;            // Optional pre-filter: 'detect' | 'segment'
+  priority?: 'speed' | 'accuracy' | 'balance';
+}
+
+export interface VisionAgentRunRequest {
+  useCase: VisionUseCase;
+  feedback?: string;
+  previousMessages?: AgentMessage[];
+}
+
 // --- Nexus Agent Copilot Types ---
 
 export type AgentChatRole = 'user' | 'assistant' | 'action';
@@ -427,4 +452,32 @@ export interface HFDatasetMeta {
   splits: Record<string, number>;
   features: string[];
   hasImages: boolean;
+}
+
+// --- Synthetic Data Generation Types ---
+export type SyntheticFormat = 'alpaca' | 'sharegpt';
+
+export interface AlpacaSample {
+  instruction: string;
+  input: string;
+  output: string;
+}
+
+export interface ShareGPTMessage {
+  from: 'human' | 'gpt';
+  value: string;
+}
+
+export interface ShareGPTSample {
+  conversations: ShareGPTMessage[];
+}
+
+export type SyntheticSample = AlpacaSample | ShareGPTSample;
+
+export interface SyntheticDataConfig {
+  topic: string;
+  format: SyntheticFormat;
+  count: number;
+  preset?: string;
+  customPrompt?: string;
 }

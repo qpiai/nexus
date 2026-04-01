@@ -120,10 +120,16 @@ def main():
     # Step 1: Import and validate
     emit("progress", "Loading AutoGPTQ library...", 0.05)
     try:
+        import torch
         from transformers import AutoTokenizer
         emit("progress", "Transformers loaded", 0.07)
     except ImportError as e:
         emit("error", f"Transformers not installed: {e}")
+        sys.exit(1)
+
+    # CUDA check — GPTQ requires GPU
+    if not torch.cuda.is_available():
+        emit("error", "GPTQ quantization requires a CUDA GPU. No GPU detected.")
         sys.exit(1)
 
     try:
@@ -143,9 +149,22 @@ def main():
             tokenizer.pad_token_id = tokenizer.eos_token_id
         emit("progress", "Tokenizer loaded", 0.15)
 
+        # Adaptive group_size: if model hidden_size isn't divisible by 128, try 64 then 32
+        from transformers import AutoConfig
+        model_config = AutoConfig.from_pretrained(args.model, trust_remote_code=True, token=token)
+        hidden_size = getattr(model_config, "hidden_size", None) or getattr(model_config, "d_model", 0)
+        group_size = 128
+        if hidden_size:
+            for gs in [128, 64, 32]:
+                if hidden_size % gs == 0:
+                    group_size = gs
+                    break
+        if group_size != 128:
+            emit("progress", f"Using group_size={group_size} (hidden_size={hidden_size} not divisible by 128)", 0.16)
+
         quantize_config = BaseQuantizeConfig(
             bits=args.bits,
-            group_size=128,
+            group_size=group_size,
             desc_act=False,
             damp_percent=0.1,
         )

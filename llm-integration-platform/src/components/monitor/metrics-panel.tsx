@@ -303,7 +303,7 @@ export function MetricsPanel() {
                 <CardContent className="p-6 md:p-7 relative">
                   <div className="flex flex-col items-center text-center">
                     <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center ring-1 ring-white/5 mb-3"
+                      className="h-12 w-12 rounded-xl flex items-center justify-center mb-3"
                       style={{ backgroundColor: `${cfg.color}15` }}
                     >
                       <Icon className="h-5 w-5" style={{ color: cfg.color }} />
@@ -416,7 +416,7 @@ export function MetricsPanel() {
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                   selectedMetrics.includes(cfg.key)
                     ? 'text-white shadow-md'
-                    : 'border border-border/60 bg-transparent text-muted-foreground hover:bg-accent hover:border-border'
+                    : 'border border-white/[0.06] bg-transparent text-muted-foreground hover:bg-accent hover:border-white/[0.12]'
                 }`}
                 style={selectedMetrics.includes(cfg.key)
                   ? { backgroundColor: `${cfg.color}30`, color: cfg.color, boxShadow: `0 0 12px ${cfg.color}15`, border: `1px solid ${cfg.color}40` }
@@ -436,7 +436,7 @@ export function MetricsPanel() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center bg-muted/50 rounded-full p-0.5 border border-border/30">
+            <div className="flex items-center bg-muted/50 rounded-full p-0.5 border border-white/[0.04]">
               {TIME_RANGES.map(tr => (
                 <button
                   key={tr.value}

@@ -14,19 +14,27 @@ export async function GET(req: NextRequest) {
   }
 
   const user = await getUserFromRequest(req);
-  const userId = user?.userId || 'default';
+  const userId = user?.userId;
 
   // Security: only allow basename (no path traversal)
-  const isAdmin = user?.role === 'admin';
   const safeName = path.basename(file);
-  const userOutputDir = path.resolve(process.cwd(), 'output', userId);
   const rootOutputDir = path.resolve(process.cwd(), 'output');
 
-  // Check user dir first, then legacy root (admin only)
-  let outputDir = userOutputDir;
-  let filePath = path.join(userOutputDir, safeName);
-  if (!fs.existsSync(filePath) && isAdmin) {
-    outputDir = rootOutputDir;
+  // Check user-specific dir first, then fall back to root output dir.
+  // This endpoint is public (in middleware PUBLIC_PATHS), so all users
+  // including unauthenticated and device-token users can download shared models.
+  let outputDir = rootOutputDir;
+  let filePath = '';
+
+  if (userId) {
+    const userOutputDir = path.resolve(process.cwd(), 'output', userId);
+    filePath = path.join(userOutputDir, safeName);
+    if (fs.existsSync(filePath)) {
+      outputDir = userOutputDir;
+    } else {
+      filePath = path.join(rootOutputDir, safeName);
+    }
+  } else {
     filePath = path.join(rootOutputDir, safeName);
   }
 

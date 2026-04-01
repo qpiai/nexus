@@ -69,11 +69,11 @@ function findByFingerprint(name: string, platform: string, hw: { cpuModel?: stri
 export async function POST(req: NextRequest) {
   const user = await getUserFromRequest(req);
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized — scan QR code to connect' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized — please log in first' }, { status: 401 });
   }
 
-  // Accept both pairing tokens and device tokens
-  if (user.type !== 'device_pairing' && user.type !== 'device' && user.type !== 'user') {
+  // Accept user tokens and device tokens
+  if (user.type !== 'device' && user.type !== 'user') {
     return NextResponse.json({ error: 'Invalid token type' }, { status: 403 });
   }
 
@@ -167,9 +167,9 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  // STRICT: Only show user's own devices
+  // Admins see ALL devices; regular users see only their own
   const devices = Array.from(deviceRegistry.values())
-    .filter(d => d.userId === user.userId)
+    .filter(d => user.role === 'admin' || d.userId === user.userId)
     .sort((a, b) => b.lastSeen - a.lastSeen);
 
   return NextResponse.json({ devices });

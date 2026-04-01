@@ -36,7 +36,7 @@ function PipelineContent() {
       <Header title="Pipeline" subtitle="Build, train & optimize models" />
       <div className="px-4 md:px-6 lg:px-8 pt-4">
         {/* Tab Bar */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-accent/50 border border-border/40 w-fit">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit">
           {TABS.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

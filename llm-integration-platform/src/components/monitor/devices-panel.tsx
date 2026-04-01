@@ -11,7 +11,6 @@ import {
   RefreshCw, Download, AlertTriangle, Zap, Activity, Monitor,
   HardDrive, Signal, Trash2,
 } from 'lucide-react';
-import { QRConnect } from '@/components/monitor/qr-connect';
 
 interface DeviceInfo {
   id: string;
@@ -224,7 +223,7 @@ function DeviceCard({ device, models, onDeploy, onRevoke, index }: {
 
         {/* Live metrics */}
         {device.metrics && isOnline && (
-          <div className="space-y-2.5 p-3 rounded-xl bg-muted/20 border border-border/40">
+          <div className="space-y-2.5 p-3 rounded-xl bg-muted/20 border border-white/[0.06]">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Live Metrics</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
               <MetricBar label="CPU" value={device.metrics.cpuUsage} unit="%" icon={Cpu} severity={cpuSeverity} />
@@ -284,7 +283,7 @@ function DeviceCard({ device, models, onDeploy, onRevoke, index }: {
 
         {/* Actions */}
         {isOnline && models.length > 0 && (
-          <div className="flex gap-2 pt-1 border-t border-border/40">
+          <div className="flex gap-2 pt-1 border-t border-white/[0.06]">
             <NexusSelect
               value={selectedModel}
               onChange={setSelectedModel}
@@ -472,27 +471,23 @@ export function DevicesPanel() {
             </div>
             <h2 className="text-xl font-bold tracking-tight mb-2">No Devices Connected</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
-              Scan the QR code or copy the URL to connect a client instantly.
+              Clients connect by logging in with their credentials.
             </p>
-
-            <div className="max-w-md mx-auto mb-8">
-              <QRConnect />
-            </div>
 
             <div className="max-w-lg mx-auto space-y-6">
               <div className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Android</p>
                 <div className="flex gap-3 justify-center flex-wrap">
-                  <a href="/nexus-v3.apk" download>
+                  <a href="/nexus-v7.apk" download>
                     <Button size="sm" className="gap-2 rounded-xl px-4 nexus-gradient border-0 text-white">
                       <Download className="h-4 w-4" />
-                      v3 APK (VLM)
+                      v7 APK (Latest)
                     </Button>
                   </a>
-                  <a href="/nexus-v2.apk" download>
+                  <a href="/nexus-v4.apk" download>
                     <Button variant="outline" size="sm" className="gap-2 rounded-xl px-4">
                       <Download className="h-4 w-4" />
-                      v2 APK (JNI)
+                      v4 APK (VLM+Vision)
                     </Button>
                   </a>
                 </div>

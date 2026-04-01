@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 
-const AUTH_SECRET = process.env.AUTH_SECRET || 'CHANGE_ME_generate_a_64_char_hex_secret';
+const AUTH_SECRET = process.env.AUTH_SECRET || 'a3f8c1d4e7b2094f56a1c8d3e9b7024f61d8a3c5e2f7094b16a8c3d5e9f2047b';
 const COOKIE_NAME = 'nexus_auth';
 const TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
@@ -11,7 +11,7 @@ export interface TokenUser {
   email: string;
   name: string;
   role: 'admin' | 'user';
-  type?: 'user' | 'device_pairing' | 'device';
+  type?: 'user' | 'device';
   deviceId?: string;
 }
 
@@ -46,20 +46,6 @@ export async function createToken(user: { id: string; email: string; name: strin
     role: user.role,
     type: 'user',
     exp: Math.floor(Date.now() / 1000) + TOKEN_MAX_AGE,
-  };
-  const data = btoa(JSON.stringify(payload))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  const sig = await hmacSign(data);
-  return `${data}.${sig}`;
-}
-
-export async function createDevicePairingToken(userId: string): Promise<string> {
-  const payload = {
-    sub: userId,
-    type: 'device_pairing',
-    exp: Math.floor(Date.now() / 1000) + 300, // 5 minutes
   };
   const data = btoa(JSON.stringify(payload))
     .replace(/\+/g, '-')
@@ -108,6 +94,23 @@ export async function verifyToken(token: string): Promise<TokenUser | null> {
   } catch {
     return null;
   }
+}
+
+export async function createPairingToken(user: { id: string; email: string; name: string; role: 'admin' | 'user' }): Promise<string> {
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    type: 'user',
+    exp: Math.floor(Date.now() / 1000) + 5 * 60, // 5 minutes
+  };
+  const data = btoa(JSON.stringify(payload))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  const sig = await hmacSign(data);
+  return `${data}.${sig}`;
 }
 
 export async function getUserFromRequest(req: NextRequest): Promise<TokenUser | null> {

@@ -1,5 +1,5 @@
 /**
- * Tests for deploy validation logic.
+ * Tests for deploy validation logic (Patent Claim 20).
  * Tests the safety check calculations directly.
  */
 

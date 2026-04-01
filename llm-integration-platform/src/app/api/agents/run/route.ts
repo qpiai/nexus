@@ -3,6 +3,7 @@ import { runAgentWorkflow } from '@/lib/engines/agent-system';
 import { AgentRunRequest } from '@/lib/types';
 import { getUserFromRequest } from '@/lib/auth';
 import { getAgentState, resetAgentState, pushAgentEvent } from '@/lib/agent-state';
+import { scoreAllModels } from '@/lib/model-scoring';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
@@ -29,6 +30,19 @@ export async function POST(req: NextRequest) {
     const options = feedback || previousMessages
       ? { feedback, previousMessages }
       : undefined;
+
+    // Pre-compute model scores for this device
+    const scoredModels = scoreAllModels(device);
+    const topModels = scoredModels.slice(0, 10).map(m => ({
+      modelName: m.modelName,
+      compositeScore: m.compositeScore,
+      fitLevel: m.fitLevel,
+      estimatedTPS: m.estimatedTPS,
+      method: m.method,
+      bitsPerWeight: m.bitsPerWeight,
+      estimatedMemoryGB: m.estimatedMemoryGB,
+    }));
+    pushAgentEvent(userId, 'scored_models', { models: topModels });
 
     // Fire-and-forget: runs independently of SSE stream
     (async () => {

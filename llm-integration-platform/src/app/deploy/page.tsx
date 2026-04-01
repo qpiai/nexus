@@ -11,10 +11,9 @@ import {
   Rocket, Smartphone, Cpu, Layers, Download,
   AlertCircle, Loader2, Square, Server, Monitor, Apple,
   Activity, Clock, Zap, Send, HardDrive, MemoryStick,
-  WifiOff, RefreshCw, ChevronDown, ChevronUp, Info,
+  WifiOff, RefreshCw, ChevronDown, ChevronUp,
   CheckCircle2, ExternalLink,
 } from 'lucide-react';
-import { QRConnect } from '@/components/monitor/qr-connect';
 import { formatTimestamp } from '@/lib/utils';
 import { useNotifications } from '@/components/notifications';
 
@@ -78,9 +77,8 @@ interface ClientDownload {
 }
 
 const CLIENTS: ClientDownload[] = [
+  { id: 'android-v7', platform: 'android', label: 'Android v7', description: 'Agent + VLM + Vision + QR login', filename: 'nexus-v7.apk', url: '/nexus-v7.apk', version: '7.0.0', sizeMB: 28, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
   { id: 'android-v4', platform: 'android', label: 'Android v4', description: 'VLM + OD/Seg + TFLite on-device', filename: 'nexus-v4.apk', url: '/nexus-v4.apk', version: '4.0.0', sizeMB: 28, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
-  { id: 'android-v3', platform: 'android', label: 'Android v3', description: 'VLM chat + vision inference', filename: 'nexus-v3.apk', url: '/nexus-v3.apk', version: '3.0.0', sizeMB: 25, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
-  { id: 'android-v2', platform: 'android', label: 'Android v2', description: 'Material You + llama.cpp JNI', filename: 'nexus-v2.apk', url: '/nexus-v2.apk', version: '2.0.0', sizeMB: 17, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
   { id: 'windows', platform: 'windows', label: 'Windows', description: 'Portable desktop client', filename: 'nexus-desktop-windows.tar.gz', url: '/nexus-desktop-windows.tar.gz', version: '1.1.0', sizeMB: 111, icon: <Monitor className="h-5 w-5" />, color: 'text-blue-400' },
   { id: 'linux', platform: 'linux', label: 'Linux', description: 'AppImage for all distros', filename: 'nexus-desktop-linux.AppImage', url: '/nexus-desktop-linux.AppImage', version: '1.1.0', sizeMB: 104, icon: <HardDrive className="h-5 w-5" />, color: 'text-orange-400' },
   { id: 'macos-arm64', platform: 'macos', label: 'macOS (Apple Silicon)', description: 'M1-M4 + Metal + MLX', filename: 'nexus-desktop-macos-arm64.zip', url: '/nexus-desktop-macos-arm64.zip', version: '1.1.0', sizeMB: 91, icon: <Apple className="h-5 w-5" />, color: 'text-gray-300' },
@@ -124,8 +122,6 @@ export default function DeployPage() {
   const [detectedPlatform, setDetectedPlatform] = useState('unknown');
   const [showAllClients, setShowAllClients] = useState(false);
 
-  // QR
-  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     setDetectedPlatform(detectPlatform());
@@ -233,7 +229,7 @@ export default function DeployPage() {
       <Header title="Deploy" subtitle="Models, clients, and devices" />
       <div className="px-4 py-6 md:px-6 md:py-8 lg:px-8 space-y-6 md:space-y-8 page-container">
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card className="animate-fade-in-up stagger-1 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary via-primary/60 to-transparent" />
             <CardContent className="p-6 md:p-7">
@@ -290,7 +286,7 @@ export default function DeployPage() {
         {/* ──── SECTION 1: Your Models ──── */}
         <Card className="animate-fade-in-up relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary via-primary/60 to-transparent" />
-          <CardHeader className="border-b border-border/40">
+          <CardHeader className="border-b border-white/[0.06]">
             <CardTitle className="text-sm flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Layers className="h-3.5 w-3.5 text-primary" />
@@ -323,10 +319,10 @@ export default function DeployPage() {
                 {models.map(m => (
                   <div
                     key={m.id}
-                    className={`p-4 rounded-xl border transition-all hover:border-border/60 ${
+                    className={`p-4 rounded-xl border transition-all hover:border-white/[0.1] ${
                       highlightModel && (m.file === highlightModel || m.file.includes(highlightModel))
                         ? 'border-primary/40 bg-primary/5 shadow-sm'
-                        : 'bg-accent/20 border-border/40'
+                        : 'bg-accent/20 border-white/[0.06]'
                     }`}
                   >
                     <div className="flex items-start gap-3 mb-3">
@@ -365,7 +361,7 @@ export default function DeployPage() {
         {/* ──── SECTION 2: Download Clients ──── */}
         <Card className="animate-fade-in-up stagger-2 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500 via-violet-500/60 to-transparent" />
-          <CardHeader className="border-b border-border/40">
+          <CardHeader className="border-b border-white/[0.06]">
             <CardTitle className="text-sm flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                 <Download className="h-3.5 w-3.5 text-violet-400" />
@@ -396,7 +392,7 @@ export default function DeployPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {visibleClients.filter(c => c.id !== recommendedClient?.id).map(c => (
-                <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/20 border border-border/40 hover:border-border/60 transition-all">
+                <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-accent/20 border border-white/[0.06] hover:border-white/[0.1] transition-all">
                   <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${c.color}`}
                     style={{ background: 'var(--accent)' }}>
                     {c.icon}
@@ -431,7 +427,7 @@ export default function DeployPage() {
         {/* ──── SECTION 3: Connected Devices & Deploy ──── */}
         <Card className="animate-fade-in-up stagger-3 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-cyan-400 via-cyan-400/60 to-transparent" />
-          <CardHeader className="border-b border-border/40">
+          <CardHeader className="border-b border-white/[0.06]">
             <CardTitle className="text-sm flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-cyan-400/10 flex items-center justify-center">
                 <Smartphone className="h-3.5 w-3.5 text-cyan-400" />
@@ -450,16 +446,7 @@ export default function DeployPage() {
                   <Smartphone className="h-6 w-6 text-cyan-400/40" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground mb-1">No devices connected</p>
-                <p className="text-xs text-muted-foreground/60 mb-4">Download a client app above and scan the QR code to pair</p>
-                <Button variant="outline" size="sm" onClick={() => setShowQR(!showQR)} className="gap-1.5">
-                  <Info className="h-3.5 w-3.5" />
-                  {showQR ? 'Hide QR' : 'Show QR Code'}
-                </Button>
-                {showQR && (
-                  <div className="mt-4 max-w-xs mx-auto">
-                    <QRConnect compact />
-                  </div>
-                )}
+                <p className="text-xs text-muted-foreground/60 mb-4">Clients connect by logging in with their Nexus credentials.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -469,7 +456,7 @@ export default function DeployPage() {
 
                   return (
                     <div key={device.id} className={`p-4 rounded-xl border transition-all ${
-                      isOnline ? 'bg-accent/20 border-border/40 hover:border-border/60' : 'bg-accent/10 border-border/20 opacity-50'
+                      isOnline ? 'bg-accent/20 border-white/[0.06] hover:border-white/[0.1]' : 'bg-accent/10 border-white/[0.04] opacity-50'
                     }`}>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -552,7 +539,7 @@ export default function DeployPage() {
 
                       {/* Inline metrics bar for online devices */}
                       {isOnline && device.metrics && (
-                        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/[0.04] text-[10px] text-muted-foreground">
                           <span>CPU: <span className={device.metrics.cpuUsage > 80 ? 'text-amber-400 font-semibold' : ''}>{device.metrics.cpuUsage}%</span></span>
                           <span>RAM: <span className={device.metrics.memoryUsage > 85 ? 'text-amber-400 font-semibold' : ''}>{device.metrics.memoryUsage}%</span></span>
                           <span>Temp: {device.metrics.temperature}&deg;C</span>
@@ -563,18 +550,6 @@ export default function DeployPage() {
                   );
                 })}
 
-                {/* QR Pairing */}
-                <div className="flex items-center justify-center pt-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowQR(!showQR)} className="text-xs text-muted-foreground gap-1.5">
-                    <Info className="h-3 w-3" />
-                    {showQR ? 'Hide QR' : 'Pair new device'}
-                  </Button>
-                </div>
-                {showQR && (
-                  <div className="max-w-xs mx-auto">
-                    <QRConnect compact />
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
@@ -583,7 +558,7 @@ export default function DeployPage() {
         {/* ──── SECTION 4: Live Status ──── */}
         <Card className="animate-fade-in-up stagger-4 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-emerald-500 via-emerald-500/60 to-transparent" />
-          <CardHeader className="border-b border-border/40">
+          <CardHeader className="border-b border-white/[0.06]">
             <CardTitle className="text-sm flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                 <Activity className="h-3.5 w-3.5 text-emerald-400" />
@@ -606,7 +581,7 @@ export default function DeployPage() {
                 {deployments.length > 0 && (
                   <div className="space-y-2">
                     {deployments.map(dep => (
-                      <div key={dep.id} className="flex items-center gap-4 p-3 rounded-xl bg-accent/20 border border-border/40">
+                      <div key={dep.id} className="flex items-center gap-4 p-3 rounded-xl bg-accent/20 border border-white/[0.06]">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-semibold truncate">{dep.model}</p>

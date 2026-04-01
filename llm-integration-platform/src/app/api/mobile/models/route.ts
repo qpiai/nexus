@@ -140,15 +140,14 @@ export async function GET(req: NextRequest) {
   const userOutputDir = path.resolve(process.cwd(), 'output', user.userId);
   scanModelsDir(userOutputDir, models);
 
-  // Only admins see legacy root-level models
-  if (user.role === 'admin') {
-    const rootOutputDir = path.resolve(process.cwd(), 'output');
-    const rootModels: typeof models = [];
-    scanModelsDir(rootOutputDir, rootModels);
-    const userFiles = new Set(models.map(m => m.file));
-    for (const m of rootModels) {
-      if (!userFiles.has(m.file)) models.push(m);
-    }
+  // All authenticated users (admins, device tokens, regular users) can see
+  // shared root-level models so mobile devices can discover and download them
+  const rootOutputDir = path.resolve(process.cwd(), 'output');
+  const rootModels: typeof models = [];
+  scanModelsDir(rootOutputDir, rootModels);
+  const userFiles = new Set(models.map(m => m.file));
+  for (const m of rootModels) {
+    if (!userFiles.has(m.file)) models.push(m);
   }
 
   // Sort: mobile-compatible first, then by size ascending

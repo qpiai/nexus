@@ -195,7 +195,7 @@ export default function AdminPage() {
           <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
 
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border/40">
+          <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
               <h3 className="text-sm font-semibold">Users</h3>
               <span className="text-[10px] text-muted-foreground bg-accent/80 px-2 py-0.5 rounded-full">{users.length}</span>
@@ -224,7 +224,7 @@ export default function AdminPage() {
           </div>
 
           {/* Mobile Search */}
-          <div className="sm:hidden p-3 border-b border-border/40">
+          <div className="sm:hidden p-3 border-b border-white/[0.06]">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -238,7 +238,7 @@ export default function AdminPage() {
 
           {/* Add User Form */}
           {showAddForm && (
-            <div className="p-4 border-b border-border/40 bg-accent/20">
+            <div className="p-4 border-b border-white/[0.06] bg-accent/20">
               <form onSubmit={handleAddUser} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -258,7 +258,7 @@ export default function AdminPage() {
                     <select
                       value={addRole}
                       onChange={e => setAddRole(e.target.value as 'admin' | 'user')}
-                      className="w-full h-9 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-full h-9 rounded-md border border-white/[0.08] bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
@@ -282,7 +282,10 @@ export default function AdminPage() {
                 {/* Avatar */}
                 {(() => {
                   const src = getAvatarSrc(u.avatar);
-                  return src ? (
+                  return src?.startsWith('data:image/') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={src} alt={u.name} className="h-10 w-10 rounded-xl shrink-0 shadow-sm object-cover" />
+                  ) : src ? (
                     <Image src={src} alt={u.name} width={40} height={40} className="h-10 w-10 rounded-xl shrink-0 shadow-sm" />
                   ) : (
                     <div className={`h-10 w-10 rounded-xl ${getInitialColor(u.name)} flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm`}>
@@ -298,7 +301,7 @@ export default function AdminPage() {
                     <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
                       u.role === 'admin'
                         ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                        : 'bg-muted text-muted-foreground border border-border/50'
+                        : 'bg-muted text-muted-foreground border border-white/[0.06]'
                     }`}>
                       {u.role === 'admin' && <Shield className="h-2.5 w-2.5 mr-0.5" />}
                       {u.role}
@@ -342,7 +345,7 @@ export default function AdminPage() {
                     {roleDropdown === u.id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setRoleDropdown(null)} />
-                        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[130px] overflow-hidden">
+                        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-white/[0.06] rounded-xl shadow-xl py-1 min-w-[130px] overflow-hidden">
                           <div className="px-3 py-1.5 text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">Set Role</div>
                           <button
                             onClick={() => handleRoleChange(u.id, 'admin')}

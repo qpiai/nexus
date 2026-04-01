@@ -290,7 +290,7 @@ export default function ChatPage() {
       <Header title="Chat" subtitle="Talk to your model" />
       <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)]">
         {/* Top bar with gradient accent */}
-        <div className="relative border-b border-border/30">
+        <div className="relative border-b border-white/[0.04]">
           <div className="nexus-gradient absolute inset-x-0 top-0 h-px overflow-hidden" />
           <div className="px-4 py-3 md:px-6 md:py-4 flex items-center gap-3 md:gap-4 flex-wrap">
             {/* Model selector */}
@@ -386,7 +386,7 @@ export default function ChatPage() {
                   <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center animate-float">
                     <MessageSquare className="h-10 w-10 text-primary/70" />
                   </div>
-                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-accent border border-border/50 flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-accent border border-white/[0.06] flex items-center justify-center">
                     <Sparkles className="h-4 w-4 text-secondary" />
                   </div>
                 </div>
@@ -430,7 +430,7 @@ export default function ChatPage() {
                   className={`max-w-[85%] md:max-w-[75%] ${
                     msg.role === 'user'
                       ? 'bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-3'
-                      : 'bg-accent/50 border border-border/30 rounded-2xl rounded-bl-md px-4 py-3'
+                      : 'bg-accent/50 border border-white/[0.04] rounded-2xl rounded-bl-md px-4 py-3'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -440,7 +440,7 @@ export default function ChatPage() {
                           <img
                             src={msg.imagePreview}
                             alt="Attached"
-                            className="max-h-40 rounded-lg border border-border/30 object-cover"
+                            className="max-h-40 rounded-lg border border-white/[0.04] object-cover"
                           />
                         </div>
                       )}
@@ -479,7 +479,7 @@ export default function ChatPage() {
                                   )}
                                 </button>
                                 {isThinkingExpanded && (
-                                  <div className="text-xs text-muted-foreground/50 leading-relaxed whitespace-pre-wrap pl-3 border-l-2 border-border/30 max-h-[200px] overflow-y-auto">
+                                  <div className="text-xs text-muted-foreground/50 leading-relaxed whitespace-pre-wrap pl-3 border-l-2 border-white/[0.04] max-h-[200px] overflow-y-auto">
                                     {thinking}
                                   </div>
                                 )}
@@ -522,7 +522,7 @@ export default function ChatPage() {
 
                 {/* User avatar */}
                 {msg.role === 'user' && (
-                  <div className="shrink-0 h-8 w-8 rounded-xl bg-accent border border-border/40 flex items-center justify-center mt-1">
+                  <div className="shrink-0 h-8 w-8 rounded-xl bg-accent border border-white/[0.06] flex items-center justify-center mt-1">
                     <User className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
@@ -556,13 +556,13 @@ export default function ChatPage() {
         )}
 
         {/* Input area with glass card and border-glow */}
-        <div className="border-t border-border/20 bg-background/80 backdrop-blur-xl px-4 py-3 md:px-6 md:py-4 lg:px-8">
+        <div className="border-t border-white/[0.03] bg-background/80 backdrop-blur-xl px-4 py-3 md:px-6 md:py-4 lg:px-8">
           <div className="max-w-3xl 2xl:max-w-4xl mx-auto">
             <div className="glass border-glow rounded-2xl p-3 transition-all duration-300 focus-within:glow-sm">
               {/* Image preview */}
               {imagePreview && (
                 <div className="mb-2 relative inline-block">
-                  <img src={imagePreview} alt="Upload" className="h-20 rounded-lg border border-border/40 object-cover" />
+                  <img src={imagePreview} alt="Upload" className="h-20 rounded-lg border border-white/[0.06] object-cover" />
                   <button
                     onClick={() => { setImageFile(null); setImagePreview(null); }}
                     className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center text-xs hover:bg-destructive/80"

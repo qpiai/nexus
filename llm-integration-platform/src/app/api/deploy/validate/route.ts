@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     modelSizeMB = Math.round(modelSizeMB / (1024 * 1024));
   }
 
-  // Safety validation based on device compatibility
+  // Safety validation based on Patent Claim 20
   const ramGB = deviceSpecs?.ramGB || (target === 'cloud' ? 64 : target === 'edge' ? 4 : 16);
   const storageGB = deviceSpecs?.storageGB || (target === 'cloud' ? 500 : target === 'edge' ? 32 : 256);
   const tdpWatts = deviceSpecs?.tdpWatts || (target === 'cloud' ? 300 : target === 'edge' ? 15 : 65);

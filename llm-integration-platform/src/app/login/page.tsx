@@ -91,7 +91,7 @@ export default function LoginPage() {
           </div>
 
           {/* Mode Toggle */}
-          <div className="flex mb-6 bg-accent/50 rounded-xl p-1 border border-border/40">
+          <div className="flex mb-6 bg-white/[0.03] rounded-xl p-1 border border-white/[0.06]">
             <button
               type="button"
               onClick={() => { setMode('signin'); setError(''); }}
@@ -133,7 +133,7 @@ export default function LoginPage() {
               </Button>
               <div className="relative mb-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/60" />
+                  <div className="w-full border-t border-white/[0.06]" />
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="bg-card px-3 text-muted-foreground/60">or</span>

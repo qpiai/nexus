@@ -56,6 +56,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
   const [progress, setProgress] = useState(0);
   const [outputFile, setOutputFile] = useState<string | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const autoStartedRef = useRef(false);
 
   useEffect(() => {
     const storedDevice = sessionStorage.getItem('nexus-device');
@@ -251,6 +252,18 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
     });
   };
 
+  useEffect(() => {
+    if (recommendation && device && !running && !done && !error && !autoStartedRef.current) {
+      const autoStart = sessionStorage.getItem('nexus-autostart-quantize');
+      if (autoStart) {
+        sessionStorage.removeItem('nexus-autostart-quantize');
+        autoStartedRef.current = true;
+        const timer = setTimeout(() => startQuantization(), 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [recommendation, device, running, done, error]);
+
   const parsed = recommendation ? parseRecommendation(recommendation) : null;
 
   const goToAgents = () => {
@@ -382,7 +395,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
       {(running || done || error) && (
         <Card className={`animate-fade-in-up overflow-hidden ${done ? 'border-emerald-500/20' : error && !done ? 'border-destructive/20' : 'border-primary/20'}`}>
           <div className={`h-px w-full ${done ? 'bg-emerald-500' : error && !done ? 'bg-destructive' : 'nexus-gradient'}`} />
-          <CardHeader className="border-b border-border/40">
+          <CardHeader className="border-b border-white/[0.06]">
             <CardTitle className="text-sm flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {running && <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center"><Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /></div>}
@@ -405,7 +418,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
           </CardHeader>
           <CardContent className="space-y-4 pt-5">
             {/* Progress bar */}
-            <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+            <div className={`w-full bg-muted rounded-full h-2.5 overflow-hidden ${running ? 'animate-progress-glow' : ''}`}>
               <div
                 className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                 style={{
@@ -422,7 +435,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
             </div>
 
             {/* Log output */}
-            <div className="bg-accent/50 rounded-xl p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1 border border-border/40">
+            <div className="bg-accent/50 rounded-xl p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1 border border-white/[0.06]">
               {logs.map((log, i) => (
                 <div
                   key={i}
@@ -456,12 +469,12 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
 
       {/* Completion */}
       {done && (
-        <Card className="border-emerald-500/20 animate-scale-in overflow-hidden">
+        <Card className="border-emerald-500/20 animate-celebrate overflow-hidden">
           <div className="h-px w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
           <CardContent className="p-6 md:p-7">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center animate-success-ring">
                   <CheckCircle2 className="h-6 w-6 text-emerald-400" />
                 </div>
                 <div>

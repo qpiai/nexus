@@ -251,9 +251,9 @@ export async function POST(req: NextRequest) {
         });
       },
       cancel() {
-        if (proc && !proc.killed) {
-          proc.kill('SIGTERM');
-        }
+        // Don't kill the process on stream cancel — the agent's fire-and-forget
+        // pattern cancels the reader, but the training should continue.
+        // Use the /api/vision/train/stop endpoint to actually stop training.
       },
     });
 

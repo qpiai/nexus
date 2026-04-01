@@ -54,7 +54,7 @@ export default function HomePage() {
           {/* Logo & Title */}
           <div className="text-center mb-6 md:mb-8 animate-fade-in-up">
             <div className="relative inline-block mb-4 md:mb-6">
-              <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/95 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-primary/20 animate-float overflow-hidden border border-border/30">
+              <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/95 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-xl shadow-primary/20 animate-float overflow-hidden border border-white/[0.04]">
                 <Image src="/qpiai_logo.jpg" alt="QpiAI" width={64} height={64} className="object-contain" />
               </div>
               <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 md:h-7 md:w-7 rounded-lg nexus-gradient flex items-center justify-center shadow-md">
@@ -84,7 +84,7 @@ export default function HomePage() {
           </div>
 
           {/* Form Card */}
-          <Card className="border-border/30 shadow-2xl animate-fade-in-up stagger-3 overflow-hidden backdrop-blur-xl">
+          <Card className="border-white/[0.04] shadow-2xl animate-fade-in-up stagger-3 overflow-hidden backdrop-blur-xl">
             <div className="h-px w-full nexus-gradient" />
             <CardContent className="p-5 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">

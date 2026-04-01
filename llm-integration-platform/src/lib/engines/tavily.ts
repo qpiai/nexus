@@ -4,18 +4,30 @@ interface TavilyResult {
   content: string;
 }
 
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
+const TAVILY_KEYS = [
+  process.env.TAVILY_API_KEY_1,
+  process.env.TAVILY_API_KEY_2,
+  process.env.TAVILY_API_KEY_3,
+].filter(Boolean) as string[];
+
+let currentTavilyKeyIndex = 0;
+
+function getNextTavilyKey(): string {
+  if (TAVILY_KEYS.length === 0) {
+    throw new Error('No Tavily API keys configured');
+  }
+  const key = TAVILY_KEYS[currentTavilyKeyIndex % TAVILY_KEYS.length];
+  currentTavilyKeyIndex++;
+  return key;
+}
 
 export async function searchTavily(query: string, maxResults: number = 5): Promise<TavilyResult[]> {
-  if (!TAVILY_API_KEY) {
-    console.warn('[Tavily] TAVILY_API_KEY is not configured. Skipping web search.');
-    return [];
-  }
-
-  const maxRetries = 3;
+  const maxRetries = TAVILY_KEYS.length * 2;
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const apiKey = getNextTavilyKey();
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
@@ -24,7 +36,7 @@ export async function searchTavily(query: string, maxResults: number = 5): Promi
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          api_key: TAVILY_API_KEY,
+          api_key: apiKey,
           query,
           search_depth: 'advanced',
           max_results: maxResults,
@@ -35,8 +47,7 @@ export async function searchTavily(query: string, maxResults: number = 5): Promi
       clearTimeout(timeout);
 
       if (res.status === 429) {
-        console.log(`[Tavily] Rate limited (attempt ${attempt + 1}/${maxRetries}), waiting...`);
-        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+        console.log(`[Tavily] Key ${attempt % TAVILY_KEYS.length + 1} rate limited, rotating...`);
         continue;
       }
 
@@ -54,7 +65,6 @@ export async function searchTavily(query: string, maxResults: number = 5): Promi
     } catch (error: unknown) {
       lastError = error instanceof Error ? error : new Error(String(error));
       if (lastError.message.includes('429') || lastError.message.includes('rate')) {
-        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
         continue;
       }
       const delay = Math.min(1000 * Math.pow(2, attempt), 4000);
@@ -62,6 +72,7 @@ export async function searchTavily(query: string, maxResults: number = 5): Promi
     }
   }
 
-  console.error(`[Tavily] Failed after ${maxRetries} attempts: ${lastError?.message}`);
+  // Return empty results instead of crashing - search is supplementary
+  console.error(`[Tavily] All keys exhausted: ${lastError?.message}`);
   return [];
 }

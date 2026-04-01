@@ -40,7 +40,7 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
   const avatarSrc = getAvatarSrc(user?.avatar ?? undefined);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 md:h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur-md px-3 md:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-14 md:h-16 items-center justify-between border-b border-white/[0.04] bg-background/95 backdrop-blur-md px-3 md:px-6 lg:px-8">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         <MobileMenuButton />
         <div className="min-w-0">
@@ -68,6 +68,13 @@ export function Header({ title, subtitle }: { title: string; subtitle?: string }
         <Link href="/profile" aria-label="Profile" className="hidden sm:block">
           {loading ? (
             <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+          ) : avatarSrc?.startsWith('data:image/') ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarSrc}
+              alt={userName}
+              className="h-8 w-8 rounded-lg cursor-pointer hover:opacity-80 transition-opacity object-cover"
+            />
           ) : avatarSrc ? (
             <Image
               src={avatarSrc}

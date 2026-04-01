@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Pencil, X, Eye, EyeOff, Shield, User } from 'lucide-react';
+import { Check, Pencil, X, Eye, EyeOff, Shield, User, Upload } from 'lucide-react';
 import { AVATAR_OPTIONS, getAvatarSrc } from '@/lib/constants';
 import { useUser } from '@/components/user-provider';
 
@@ -42,6 +42,7 @@ export default function ProfilePage() {
 
   // Avatar state
   const [avatarSaving, setAvatarSaving] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -117,6 +118,30 @@ export default function ProfilePage() {
     }
   }
 
+  function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError('');
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+    if (file.size > 200 * 1024) {
+      setUploadError('Image must be under 200KB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUri = reader.result as string;
+      handleAvatarSelect(dataUri);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = '';
+  }
+
   async function handlePasswordChange(e: FormEvent) {
     e.preventDefault();
     setPwError('');
@@ -188,7 +213,14 @@ export default function ProfilePage() {
         <div className="glass rounded-2xl p-6 glow-sm relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
           <div className="flex flex-col sm:flex-row items-center gap-5">
-            {avatarSrc ? (
+            {avatarSrc?.startsWith('data:image/') ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarSrc}
+                alt={user.name}
+                className="h-20 w-20 rounded-2xl shadow-lg shrink-0 object-cover"
+              />
+            ) : avatarSrc ? (
               <Image
                 src={avatarSrc}
                 alt={user.name}
@@ -243,7 +275,7 @@ export default function ProfilePage() {
         <div className="glass rounded-2xl p-6 glow-sm relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
           <h3 className="text-sm font-semibold mb-4">Choose Your Avatar</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             {AVATAR_OPTIONS.map((opt) => {
               const isSelected = user.avatar === opt.id;
               return (
@@ -251,10 +283,10 @@ export default function ProfilePage() {
                   key={opt.id}
                   onClick={() => handleAvatarSelect(opt.id)}
                   disabled={avatarSaving}
-                  className={`relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 ${
+                  className={`relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all duration-200 w-[88px] ${
                     isSelected
                       ? `${opt.color} shadow-lg bg-accent/50`
-                      : 'border-border/40 hover:border-border hover:bg-accent/30'
+                      : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-accent/30'
                   } disabled:opacity-50`}
                 >
                   {isSelected && (
@@ -265,17 +297,54 @@ export default function ProfilePage() {
                   <Image
                     src={opt.src}
                     alt={opt.label}
-                    width={80}
-                    height={80}
+                    width={64}
+                    height={64}
                     className={`rounded-xl transition-transform duration-200 ${isSelected ? 'scale-105' : 'hover:scale-105'}`}
                   />
-                  <span className={`text-xs font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <span className={`text-[11px] font-medium ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {opt.label}
                   </span>
                 </button>
               );
             })}
+
+            {/* Upload custom avatar */}
+            <label
+              className={`relative flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 border-dashed transition-all duration-200 w-[88px] cursor-pointer ${
+                user.avatar?.startsWith('data:image/')
+                  ? 'border-primary shadow-lg bg-accent/50'
+                  : 'border-white/[0.06] hover:border-white/[0.12] hover:bg-accent/30'
+              } ${avatarSaving ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              {user.avatar?.startsWith('data:image/') && (
+                <div className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center z-10">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="sr-only"
+              />
+              {user.avatar?.startsWith('data:image/') ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatar}
+                  alt="Custom"
+                  className="h-16 w-16 rounded-xl object-cover"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-xl bg-muted/50 flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <span className="text-[11px] font-medium text-muted-foreground">Upload</span>
+            </label>
           </div>
+          {uploadError && (
+            <p className="text-xs text-destructive mt-3 text-center">{uploadError}</p>
+          )}
         </div>
 
         {/* Account Details */}
@@ -283,11 +352,11 @@ export default function ProfilePage() {
           <div className="absolute inset-x-0 top-0 h-px nexus-gradient" />
           <h3 className="text-sm font-semibold mb-4">Account Details</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-border/40">
+            <div className="flex justify-between items-center py-2 border-b border-white/[0.06]">
               <span className="text-sm text-muted-foreground">Member since</span>
               <span className="text-sm font-medium">{new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-border/40">
+            <div className="flex justify-between items-center py-2 border-b border-white/[0.06]">
               <span className="text-sm text-muted-foreground">Authentication</span>
               <span className="text-sm font-medium capitalize">{user.provider === 'google' ? 'Google OAuth' : 'Email & Password'}</span>
             </div>

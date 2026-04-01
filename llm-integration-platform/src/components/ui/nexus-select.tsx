@@ -243,23 +243,22 @@ export function NexusSelect({
     <div
       ref={dropdownRef}
       className={cn(
-        'fixed z-50 rounded-xl border border-border/50 shadow-2xl',
+        'fixed z-50 rounded-xl border border-white/[0.06] shadow-2xl',
         'bg-[var(--background)] backdrop-blur-xl',
         'animate-scale-in',
-        dropdownPos.openUp ? 'origin-bottom' : 'origin-top',
-        'ring-1 ring-white/[0.04]'
+        dropdownPos.openUp ? 'origin-bottom' : 'origin-top'
       )}
       style={{
         top: dropdownPos.top,
         bottom: dropdownPos.bottom,
         left: dropdownPos.left,
         width: dropdownPos.width,
-        boxShadow: '0 8px 32px var(--shadow-color), 0 0 1px rgba(255,255,255,0.05)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
       }}
     >
       {/* Search bar */}
       {searchable && (
-        <div className="px-2.5 pt-2 pb-1.5 border-b border-border/30">
+        <div className="px-2.5 pt-2 pb-1.5 border-b border-white/[0.04]">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
             <input
@@ -268,7 +267,7 @@ export function NexusSelect({
               value={searchQuery}
               onChange={e => { setSearchQuery(e.target.value); setFocusedIndex(0); }}
               placeholder="Search..."
-              className="w-full h-8 pl-8 pr-3 text-xs bg-muted/50 border border-border/30 rounded-lg outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 placeholder:text-muted-foreground/40"
+              className="w-full h-8 pl-8 pr-3 text-xs bg-muted/50 border border-white/[0.04] rounded-lg outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
@@ -276,7 +275,7 @@ export function NexusSelect({
 
       {/* Filter chips */}
       {filterGroups && filterGroups.length > 0 && (
-        <div className="px-2.5 py-1.5 border-b border-border/30 flex flex-wrap gap-1">
+        <div className="px-2.5 py-1.5 border-b border-white/[0.04] flex flex-wrap gap-1">
           {filterGroups.map(group => (
             group.options.map(filter => (
               <button
@@ -286,7 +285,7 @@ export function NexusSelect({
                   'px-2 py-0.5 rounded-md text-[10px] font-medium border transition-all',
                   activeFilters.has(filter.value)
                     ? (filter.color || 'bg-primary/20 text-primary border-primary/30')
-                    : 'bg-muted/30 text-muted-foreground/60 border-border/20 hover:bg-muted/50'
+                    : 'bg-muted/30 text-muted-foreground/60 border-white/[0.03] hover:bg-muted/50'
                 )}
               >
                 {filter.label}
@@ -401,7 +400,7 @@ export function NexusSelect({
           isSm ? 'h-8 px-2.5 text-xs' : 'h-10 px-3.5 text-sm',
           open
             ? 'border-primary/40 ring-2 ring-primary/20 shadow-[0_0_12px_rgba(123,159,199,0.12)]'
-            : 'border-border/60 hover:border-border/80',
+            : 'border-white/[0.08] hover:border-white/[0.12]',
           disabled && 'opacity-40 cursor-not-allowed',
           triggerClassName
         )}

@@ -3,6 +3,7 @@ import { generateId } from '../utils';
 import { callGemini } from './gemini';
 import { searchTavily } from './tavily';
 import { getModelNameListAnnotated, RAM_SAFETY_FACTOR } from '../constants';
+import { scoreAllModels, formatScoredModelsForPrompt } from '../model-scoring';
 
 const TYPE_MAP: Record<AgentRole, AgentMessage['type']> = {
   research: 'analysis',
@@ -23,7 +24,7 @@ function deviceSummary(device: DeviceInput): string {
 }
 
 // ---- Research Agent (Tavily + Gemini) ----
-async function runResearchAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string): Promise<string> {
+async function runResearchAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string, scoredContext?: string): Promise<string> {
   const appleSilicon = isAppleSilicon(device);
   const queries = [
     `best quantized LLM for ${device.deviceName} ${device.ramGB}GB RAM ${device.deviceType}`,
@@ -56,16 +57,18 @@ async function runResearchAgent(device: DeviceInput, iteration: number, priorMes
     ? '\n\nPrior agent messages:\n' + priorMessages.map(m => `[${m.agent}]: ${m.content}`).join('\n')
     : '';
 
-  const systemPrompt = `You are a Research Agent specializing in LLM quantization and edge deployment. Your role is to analyze hardware capabilities and research the best quantized model options. Be specific about model names, quantization methods (GGUF, AWQ, FP16, or MLX), and bit precisions (2-bit, 3-bit, 4-bit, 5-bit, 8-bit, or 16-bit FP16 for no quantization). IMPORTANT: Prefer the LATEST version of each model family — e.g., Qwen 3.5 over Qwen 3, Gemma 3n/3 over Gemma 2, SmolLM3 over SmolLM2. Newer models have better performance per parameter. For Apple Silicon devices (macOS arm64, iPhone, iPad), strongly prefer MLX — it uses unified memory and Metal GPU for optimal performance on M-series and A-series chips. IMPORTANT: MLX is ONLY available on Apple Silicon devices — NEVER recommend MLX for Linux, Windows, or non-Apple hardware. FP16 (full precision, no quantization) is a good choice for small models (under ~2B params) when the device has plenty of RAM — it provides maximum quality. IMPORTANT: Only ${Math.round(RAM_SAFETY_FACTOR * 100)}% of device RAM is usable for the model — the rest is reserved for OS and background processes. If the user mentions vision, images, camera, or visual understanding, recommend a VLM (Vision-Language Model) like Qwen 2.5 VL, SmolVLM, or Gemma 3 Vision. Keep responses concise (3-5 sentences).`;
+  const systemPrompt = `You are a Research Agent specializing in LLM quantization and edge deployment. Your role is to analyze hardware capabilities and research the best quantized model options. Be specific about model names, quantization methods (GGUF, AWQ, FP16, or MLX), and bit precisions (2-bit, 3-bit, 4-bit, 5-bit, 8-bit, or 16-bit FP16 for no quantization). IMPORTANT: Prefer the LATEST version of each model family — e.g., Qwen 3.5 over Qwen 3, Gemma 3n/3 over Gemma 2, SmolLM3 over SmolLM2. Newer models have better performance per parameter. For Apple Silicon devices (macOS arm64, iPhone, iPad), strongly prefer MLX — it uses unified memory and Metal GPU for optimal performance on M-series and A-series chips. IMPORTANT: MLX is ONLY available on Apple Silicon devices — NEVER recommend MLX for Linux, Windows, or non-Apple hardware. FP16 (full precision, no quantization) is a good choice for small models (under ~2B params) when the device has plenty of RAM — it provides maximum quality. IMPORTANT: Only ${Math.round(RAM_SAFETY_FACTOR * 100)}% of device RAM is usable for the model — the rest is reserved for OS and background processes. If the user mentions vision, images, camera, or visual understanding, recommend a VLM (Vision-Language Model) like Qwen 2.5 VL, SmolVLM, or Gemma 3 Vision. You have access to PRE-COMPUTED model fit scores below. These are deterministic calculations based on the device's actual hardware — use them as ground truth for memory fit and speed estimates. Your role is to VALIDATE and ENRICH these scores with web search context (newer benchmarks, known issues, community feedback). Do not contradict the memory calculations. Keep responses concise (3-5 sentences).`;
 
   const feedbackContext = feedback ? `\n\nUser feedback from previous run: ${feedback}` : '';
 
-  const userPrompt = `Iteration ${iteration}/2. ${deviceSummary(device)}
+  const scoredSection = scoredContext ? `\n\n${scoredContext}\n` : '';
 
+  const userPrompt = `Iteration ${iteration}/2. ${deviceSummary(device)}
+${scoredSection}
 ${searchContext}${priorContext}${feedbackContext}
 
 ${iteration === 1
-    ? 'Analyze this device and research which quantized LLMs would be the best fit. Consider RAM constraints, GPU availability, and device type.'
+    ? 'Analyze this device and research which quantized LLMs would be the best fit. Consider RAM constraints, GPU availability, and device type. Use the pre-computed scores as ground truth.'
     : 'Refine your analysis based on prior discussion. Focus on the most viable specific model and quantization approach.'
   }`;
 
@@ -73,21 +76,22 @@ ${iteration === 1
 }
 
 // ---- Reasoning Agent (Gemini) ----
-async function runReasoningAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string): Promise<string> {
+async function runReasoningAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string, scoredContext?: string): Promise<string> {
   const priorContext = priorMessages.map(m => `[${m.agent}]: ${m.content}`).join('\n');
   const modelList = getModelNameListAnnotated().join(', ');
 
-  const systemPrompt = `You are a Reasoning Agent that proposes specific quantization strategies. Given device specs and research findings, you must propose a SPECIFIC model name from this list: ${modelList}. When multiple versions of the same model family exist (e.g., Gemma 2 vs Gemma 3, Qwen 2.5 vs Qwen 3.5, SmolLM2 vs SmolLM3), ALWAYS prefer the NEWEST version as they have better performance per parameter. Models marked "(latest)" are the preferred choice within their family. Choose a SPECIFIC quantization method (AWQ, GGUF, FP16, or MLX) and bit precision (GGUF: 2, 3, 4, 5, 8 bit; AWQ: 4 or 8 bit; FP16: 16 bit — no quantization, full precision; MLX: 4 or 8 bit). For Apple Silicon (macOS arm64, iPhone, iPad), strongly prefer MLX — it leverages unified memory and Metal GPU for best performance. IMPORTANT: MLX is ONLY available on Apple Silicon — NEVER recommend MLX for Linux, Windows, or non-Apple hardware. FP16 (16-bit, no quantization) provides maximum quality — recommend it for small models (under ~2B params) when the device has plenty of RAM. CRITICAL: The model must fit within ${Math.round(RAM_SAFETY_FACTOR * 100)}% of the device's total RAM (safety margin for OS/background processes). Use this formula: model RAM ≈ (params_billions × bits) / 8 + 15% overhead. Keep responses concise (3-5 sentences).`;
+  const systemPrompt = `You are a Reasoning Agent. You have PRE-COMPUTED model rankings below, ordered by composite score. These scores account for memory fit, estimated speed, model quality, and context length — all calculated from actual hardware specs. Your job: pick the BEST model from the top candidates, considering any nuances the scoring doesn't capture (e.g., specific task suitability, known quantization quality issues, community benchmarks from the Research Agent's findings). Prefer models with 'perfect' or 'good' fit levels. If the top-scored model is clearly best, recommend it. If multiple models are close, explain the trade-off. Output a SPECIFIC model + method + bits. When multiple versions exist, prefer the NEWEST. Models marked "(latest)" are preferred. Available models: ${modelList}. For Apple Silicon, prefer MLX. MLX is ONLY for Apple Silicon. CRITICAL: Model must fit within ${Math.round(RAM_SAFETY_FACTOR * 100)}% of device RAM. Keep responses concise (3-5 sentences).`;
 
   const feedbackContext = feedback ? `\n\nUser feedback from previous run: ${feedback}` : '';
+  const scoredSection = scoredContext ? `\n${scoredContext}\n` : '';
 
   const userPrompt = `Iteration ${iteration}/2. ${deviceSummary(device)}
-
+${scoredSection}
 Prior agent messages:
 ${priorContext}${feedbackContext}
 
 ${iteration === 1
-    ? 'Based on the research, propose a specific model + quantization method + bit precision. Justify why it fits this device.'
+    ? 'Based on the pre-computed scores and research, propose a specific model + quantization method + bit precision. Justify why it fits this device.'
     : 'Refine your recommendation based on the critic\'s feedback. Be very specific about the final choice.'
   }`;
 
@@ -95,39 +99,41 @@ ${iteration === 1
 }
 
 // ---- Critic Agent (Gemini) ----
-async function runCriticAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string): Promise<string> {
+async function runCriticAgent(device: DeviceInput, iteration: number, priorMessages: AgentMessage[], feedback?: string, scoredContext?: string): Promise<string> {
   const priorContext = priorMessages.map(m => `[${m.agent}]: ${m.content}`).join('\n');
 
-  const systemPrompt = `You are a Critic Agent that evaluates quantization proposals for feasibility. Check: (1) Will the model fit within ${Math.round(RAM_SAFETY_FACTOR * 100)}% of the device's RAM? (the remaining ${Math.round((1 - RAM_SAFETY_FACTOR) * 100)}% is reserved for OS and other processes — this safety margin is mandatory). (2) Is the quantization method appropriate for the device type? For Apple Silicon devices, MLX is preferred over GGUF/AWQ. For non-Apple devices (Linux, Windows), MLX is NOT available — reject any MLX recommendation for non-Apple hardware. FP16 is valid for any platform but only practical for small models. (3) Are the performance estimates realistic? Use: model RAM ≈ (params_billions × bits) / 8 + 15% overhead. If FP16 (16-bit, no quantization) is proposed, verify the full-size model truly fits with safety margin. Be constructive but thorough. Keep responses concise (3-5 sentences).`;
+  const systemPrompt = `You are a Critic Agent. You have the SAME pre-computed model scores as the other agents. Your job: verify the Reasoning Agent's recommendation against the computed data. Check: (1) Does the recommended model appear in the scored list? What's its fit level and score? (2) Is there a HIGHER-scored model that the Reasoning Agent overlooked? (3) Are the memory estimates consistent? (The pre-computed scores use: mem = params × bpp + KV_cache + 0.5GB overhead, with ${Math.round(RAM_SAFETY_FACTOR * 100)}% RAM safety margin.) (4) Is the method appropriate for the platform? (MLX only on Apple Silicon.) If the recommendation aligns with the top-scored models, approve it. If not, explain why a different choice would be better. Keep responses concise (3-5 sentences).`;
 
   const feedbackContext = feedback ? `\n\nUser feedback from previous run: ${feedback}` : '';
+  const scoredSection = scoredContext ? `\n${scoredContext}\n` : '';
 
   const userPrompt = `Iteration ${iteration}/2. ${deviceSummary(device)}
-
+${scoredSection}
 Prior agent messages:
 ${priorContext}${feedbackContext}
 
-Evaluate the reasoning agent's proposal. Does the model fit within ${(device.ramGB * RAM_SAFETY_FACTOR).toFixed(1)}GB usable RAM (${Math.round(RAM_SAFETY_FACTOR * 100)}% of ${device.ramGB}GB total, with ${Math.round((1 - RAM_SAFETY_FACTOR) * 100)}% safety margin)? Is the method (GGUF vs AWQ vs MLX) appropriate for ${device.deviceType}?${isAppleSilicon(device) ? ' This is an Apple Silicon device — MLX should be preferred.' : ''}`;
+Evaluate the reasoning agent's proposal against the pre-computed scores. Does the model fit within ${(device.ramGB * RAM_SAFETY_FACTOR).toFixed(1)}GB usable RAM? Is the method appropriate for ${device.deviceType}?${isAppleSilicon(device) ? ' This is an Apple Silicon device — MLX should be preferred.' : ''}`;
 
   return callGemini(systemPrompt, userPrompt);
 }
 
 // ---- Orchestrator Agent (Gemini) ----
-async function runOrchestratorAgent(device: DeviceInput, iteration: number, maxIterations: number, priorMessages: AgentMessage[], feedback?: string): Promise<string> {
+async function runOrchestratorAgent(device: DeviceInput, iteration: number, maxIterations: number, priorMessages: AgentMessage[], feedback?: string, scoredContext?: string): Promise<string> {
   const priorContext = priorMessages.map(m => `[${m.agent}]: ${m.content}`).join('\n');
   const modelList = getModelNameListAnnotated().join(', ');
 
   const isFinal = iteration === maxIterations;
 
-  const systemPrompt = `You are the Orchestrator Agent that synthesizes all agent outputs into a final decision. When multiple versions of the same model family exist, ALWAYS prefer the NEWEST version (e.g., Qwen 3.5 over Qwen 3, Gemma 3n/3 over Gemma 2, SmolLM3 over SmolLM2). ${isFinal
-    ? `This is the FINAL iteration. You MUST output a concrete recommendation line in exactly this format: RECOMMENDATION: [bits]-bit [method] [model name]. For example: "RECOMMENDATION: 4-bit GGUF Qwen 3 0.6B" or "RECOMMENDATION: 4-bit MLX Qwen 3 0.6B" or "RECOMMENDATION: 16-bit FP16 SmolLM2 135M" (FP16 = no quantization, full quality). Choose from these models: ${modelList}. Methods: GGUF, AWQ, FP16, or MLX. Bits for GGUF: 2, 3, 4, 5, 8. Bits for AWQ: 4 or 8. Bits for FP16: 16 (always — it means full precision). Bits for MLX: 4 or 8. IMPORTANT: MLX is ONLY for Apple Silicon devices (M1/M2/M3/M4, Mac, iPhone, iPad) — NEVER recommend MLX for Linux or Windows. FP16 works on any platform but only practical for small models that fit in RAM at full size. The model must fit within ${Math.round(RAM_SAFETY_FACTOR * 100)}% of the device's RAM (safety margin).`
+  const systemPrompt = `You are the Orchestrator Agent that synthesizes all agent outputs into a final decision. You have pre-computed model rankings. When multiple versions of the same model family exist, ALWAYS prefer the NEWEST version (e.g., Qwen 3.5 over Qwen 3, Gemma 3n/3 over Gemma 2, SmolLM3 over SmolLM2). ${isFinal
+    ? `FINAL ITERATION. Pick the BEST model from the top of the ranked list unless agents have identified a compelling reason to deviate. You MUST output a concrete recommendation line in exactly this format: RECOMMENDATION: [bits]-bit [method] [model name]. For example: "RECOMMENDATION: 4-bit GGUF Qwen 3 0.6B" or "RECOMMENDATION: 4-bit MLX Qwen 3 0.6B" or "RECOMMENDATION: 16-bit FP16 SmolLM2 135M" (FP16 = no quantization, full quality). Choose from these models: ${modelList}. Methods: GGUF, AWQ, FP16, or MLX. Bits for GGUF: 2, 3, 4, 5, 8. Bits for AWQ: 4 or 8. Bits for FP16: 16 (always — it means full precision). Bits for MLX: 2, 3, 4, 5, 6, or 8. IMPORTANT: MLX is ONLY for Apple Silicon devices (M1/M2/M3/M4, Mac, iPhone, iPad) — NEVER recommend MLX for Linux or Windows. FP16 works on any platform but only practical for small models that fit in RAM at full size. The model must fit within ${Math.round(RAM_SAFETY_FACTOR * 100)}% of the device's RAM (safety margin).`
     : 'Summarize the current state and guide the next iteration.'
   } Keep responses concise (3-5 sentences).`;
 
   const feedbackContext = feedback ? `\n\nUser feedback from previous run: ${feedback}` : '';
+  const scoredSection = scoredContext ? `\n${scoredContext}\n` : '';
 
   const userPrompt = `Iteration ${iteration}/${maxIterations}. ${deviceSummary(device)}
-
+${scoredSection}
 All agent messages this iteration:
 ${priorContext}${feedbackContext}
 
@@ -159,6 +165,10 @@ export async function* runAgentWorkflow(
     startedAt: Date.now(),
   };
 
+  // Pre-compute model scores for this device
+  const scoredModels = scoreAllModels(device, 'general');
+  const scoredContext = formatScoredModelsForPrompt(scoredModels, 15);
+
   yield { type: 'workflow', data: { ...wf } };
 
   const agentOrder: AgentRole[] = ['research', 'reasoning', 'critic', 'orchestrator'];
@@ -176,16 +186,16 @@ export async function* runAgentWorkflow(
       try {
         switch (agent) {
           case 'research':
-            content = await runResearchAgent(device, iter, allMessages, feedback);
+            content = await runResearchAgent(device, iter, allMessages, feedback, scoredContext);
             break;
           case 'reasoning':
-            content = await runReasoningAgent(device, iter, allMessages, feedback);
+            content = await runReasoningAgent(device, iter, allMessages, feedback, scoredContext);
             break;
           case 'critic':
-            content = await runCriticAgent(device, iter, allMessages, feedback);
+            content = await runCriticAgent(device, iter, allMessages, feedback, scoredContext);
             break;
           case 'orchestrator':
-            content = await runOrchestratorAgent(device, iter, maxIterations, allMessages, feedback);
+            content = await runOrchestratorAgent(device, iter, maxIterations, allMessages, feedback, scoredContext);
             break;
         }
       } catch (error: unknown) {

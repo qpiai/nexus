@@ -10,12 +10,13 @@ import { NexusSelect } from '@/components/ui/nexus-select';
 import {
   Sparkles, Play, Loader2, CheckCircle2, AlertCircle,
   ArrowRight, RotateCcw, Upload, Database, Cpu, Settings2,
-  Layers, Brain, ChevronDown, ChevronUp, Rocket, Zap, Square,
+  Layers, Brain, ChevronDown, ChevronUp, Rocket, Zap, Square, Wand2,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { SUPPORTED_MODELS, FINETUNE_TYPES, POPULAR_DATASETS, FINETUNE_DEFAULTS, TRAINING_MODES, GRPO_REWARD_TYPES, VLM_DATASETS, VLM_FINETUNE_DEFAULTS } from '@/lib/constants';
 import type { HFDatasetMeta } from '@/lib/types';
 import { useNotifications } from '@/components/notifications';
+import { SyntheticDataEditor } from '@/components/pipeline/synthetic-data-editor';
 
 interface LogEntry {
   type: string;
@@ -79,6 +80,9 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
   // File upload
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Synthetic data editor
+  const [showSyntheticEditor, setShowSyntheticEditor] = useState(false);
 
   useEffect(() => {
     const storedRec = sessionStorage.getItem('nexus-recommendation');
@@ -474,7 +478,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {/* Model Selection */}
           <Card className="animate-fade-in-up relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500 via-violet-500/60 to-transparent" />
-            <CardHeader className="border-b border-border/40">
+            <CardHeader className="border-b border-white/[0.06]">
               <CardTitle className="text-sm flex items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                   <Cpu className="h-3.5 w-3.5 text-violet-400" />
@@ -515,7 +519,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {/* Training Mode (SFT / GRPO) — hidden for VLM (VLM always uses SFT) */}
           {!isVLM && <Card className="animate-fade-in-up stagger-2 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-cyan-500 via-cyan-500/60 to-transparent" />
-            <CardHeader className="border-b border-border/40">
+            <CardHeader className="border-b border-white/[0.06]">
               <CardTitle className="text-sm flex items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-cyan-500/10 flex items-center justify-center">
                   <Zap className="h-3.5 w-3.5 text-cyan-400" />
@@ -535,10 +539,10 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 text-left ${
                       isSelected
                         ? 'border-cyan-500/30 bg-cyan-500/5 shadow-sm'
-                        : 'border-border/50 hover:bg-accent/50 hover:border-border/70'
+                        : 'border-white/[0.06] hover:bg-accent/50 hover:border-white/[0.1]'
                     } disabled:opacity-50`}
                   >
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center ring-1 ring-white/5 shrink-0 ${isSelected ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-sm' : 'bg-accent/60'}`}>
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 shadow-sm' : 'bg-accent/60'}`}>
                       <Zap className={`h-4 w-4 ${isSelected ? 'text-cyan-400' : 'text-muted-foreground'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -602,7 +606,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {/* Finetune Type */}
           <Card className="animate-fade-in-up stagger-2 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-emerald-500 via-emerald-500/60 to-transparent" />
-            <CardHeader className="border-b border-border/40">
+            <CardHeader className="border-b border-white/[0.06]">
               <CardTitle className="text-sm flex items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                   <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
@@ -621,10 +625,10 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 text-left ${
                       isSelected
                         ? 'border-primary/30 bg-primary/5 shadow-sm'
-                        : 'border-border/50 hover:bg-accent/50 hover:border-border/70'
+                        : 'border-white/[0.06] hover:bg-accent/50 hover:border-white/[0.1]'
                     } disabled:opacity-50`}
                   >
-                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center ring-1 ring-white/5 shrink-0 ${isSelected ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm' : 'bg-accent/60'}`}>
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm' : 'bg-accent/60'}`}>
                       <Sparkles className={`h-4 w-4 ${isSelected ? 'text-emerald-400' : 'text-muted-foreground'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -643,7 +647,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {/* Dataset Selection */}
           <Card className="animate-fade-in-up stagger-3 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary via-primary/60 to-transparent" />
-            <CardHeader className="border-b border-border/40">
+            <CardHeader className="border-b border-white/[0.06]">
               <CardTitle className="text-sm flex items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Database className="h-3.5 w-3.5 text-primary" />
@@ -679,7 +683,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                   {hfLoading && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" /> Fetching dataset info...</p>}
                   {hfError && <p className="text-xs text-red-400">{hfError}</p>}
                   {hfMeta && (
-                    <div className="text-xs text-muted-foreground p-3 rounded-xl bg-accent/30 border border-border/40 space-y-1">
+                    <div className="text-xs text-muted-foreground p-3 rounded-xl bg-accent/30 border border-white/[0.06] space-y-1">
                       <p className="font-semibold text-foreground">{hfMeta.id}</p>
                       {hfMeta.description && <p className="line-clamp-2">{hfMeta.description.slice(0, 150)}</p>}
                       <div className="flex items-center gap-2 flex-wrap">
@@ -728,24 +732,56 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={running || uploading}
-                    className="w-full"
+                    className="flex-1"
                   >
                     {uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
                       <Upload className="h-4 w-4 mr-2" />
                     )}
-                    {uploading ? 'Uploading...' : 'Upload Dataset'}
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSyntheticEditor(true)}
+                    disabled={running}
+                    className="flex-1 text-violet-400 border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-500/5"
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Generate with AI
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Synthetic Data Editor */}
+          {showSyntheticEditor && (
+            <Card className="animate-fade-in-up relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500 via-violet-500/60 to-transparent" />
+              <CardContent className="p-5">
+                <SyntheticDataEditor
+                  onSave={(datasetPath, name, format, samples) => {
+                    setUploadedDatasets(prev => [...prev, {
+                      id: datasetPath,
+                      name,
+                      format,
+                      samples,
+                    }]);
+                    setSelectedDataset(datasetPath);
+                    setShowSyntheticEditor(false);
+                  }}
+                  onClose={() => setShowSyntheticEditor(false)}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Advanced Config */}
           <Card className="animate-fade-in-up stagger-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-400 via-amber-400/60 to-transparent" />
-            <CardHeader className="border-b border-border/40">
+            <CardHeader className="border-b border-white/[0.06]">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="w-full flex items-center justify-between"
@@ -836,7 +872,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                     disabled={running}
                   />
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-accent/30">
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] bg-accent/30">
                   <input
                     type="checkbox"
                     id="merge-adapters-panel"
@@ -882,7 +918,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {(running || done || error) ? (
             <Card className={`animate-fade-in-up overflow-hidden ${done ? 'border-emerald-500/20' : error && !done ? 'border-destructive/20' : 'border-primary/20'}`}>
               <div className={`h-px w-full ${done ? 'bg-emerald-500' : error && !done ? 'bg-destructive' : 'nexus-gradient'}`} />
-              <CardHeader className="border-b border-border/40">
+              <CardHeader className="border-b border-white/[0.06]">
                 <CardTitle className="text-sm flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {running && <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center"><Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /></div>}
@@ -897,7 +933,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
               </CardHeader>
               <CardContent className="p-6 md:p-7 pt-6 space-y-4">
                 {/* Progress bar */}
-                <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                <div className={`w-full bg-muted rounded-full h-2.5 overflow-hidden ${running ? 'animate-progress-glow' : ''}`}>
                   <div
                     className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                     style={{
@@ -914,7 +950,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                 </div>
 
                 {/* Log output */}
-                <div className="bg-accent/50 rounded-xl p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1 border border-border/40">
+                <div className="bg-accent/50 rounded-xl p-4 max-h-80 overflow-y-auto font-mono text-xs space-y-1 border border-white/[0.06]">
                   {logs.map((log, i) => (
                     <div
                       key={i}
@@ -970,7 +1006,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
           {lossData.length > 1 && (
             <Card className="animate-fade-in-up overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-emerald-500 via-emerald-500/60 to-transparent" />
-              <CardHeader className="border-b border-border/40">
+              <CardHeader className="border-b border-white/[0.06]">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                     <Layers className="h-3.5 w-3.5 text-emerald-400" />
@@ -1029,12 +1065,12 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
 
           {/* Completion Card */}
           {done && (
-            <Card className="border-emerald-500/20 animate-scale-in overflow-hidden">
+            <Card className="border-emerald-500/20 animate-celebrate overflow-hidden">
               <div className="h-px w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
               <CardContent className="p-6 md:p-7">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center shrink-0">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center shrink-0 animate-success-ring">
                       <CheckCircle2 className="h-6 w-6 text-emerald-400" />
                     </div>
                     <div>

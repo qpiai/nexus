@@ -19,12 +19,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 GGUF_VENV = os.path.join(PROJECT_DIR, "venvs", "gguf")
 if os.path.isdir(GGUF_VENV):
-    # Support both flat (--target) and standard (uv venv) layouts
     sys.path.insert(0, GGUF_VENV)
-    site_pkg = os.path.join(GGUF_VENV, "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages")
-    if os.path.isdir(site_pkg):
-        sys.path.insert(0, site_pkg)
-    os.environ["PYTHONPATH"] = GGUF_VENV + ":" + site_pkg + ":" + os.environ.get("PYTHONPATH", "")
+    os.environ["PYTHONPATH"] = GGUF_VENV + ":" + os.environ.get("PYTHONPATH", "")
 
 def emit(msg_type, message, progress=None):
     """Emit a JSON progress line to stdout."""
@@ -50,9 +46,7 @@ def run_cmd(cmd, timeout=600, desc="command", cwd=None):
     """
     emit("progress", f"Running: {desc}")
     env = os.environ.copy()
-    # Include both flat and uv venv site-packages in PYTHONPATH
-    _sp = os.path.join(GGUF_VENV, "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages")
-    env["PYTHONPATH"] = _sp + ":" + GGUF_VENV + ":" + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = GGUF_VENV + ":" + env.get("PYTHONPATH", "")
     # Ensure ~/.local/bin is in PATH (for pip-installed cmake, etc.)
     local_bin = os.path.join(os.path.expanduser("~"), ".local", "bin")
     if local_bin not in env.get("PATH", ""):

@@ -112,11 +112,11 @@ export function NotificationPanel({ open, onClose }: { open: boolean; onClose: (
   return (
     <div
       ref={panelRef}
-      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-xl border border-border bg-card shadow-xl z-50 flex flex-col overflow-hidden"
+      className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-xl border border-white/[0.06] bg-card shadow-xl z-50 flex flex-col overflow-hidden"
       style={{ animation: 'notif-enter 0.15s ease-out' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
         <span className="text-xs font-semibold text-foreground">Notifications</span>
         {notifications.length > 0 && (
           <button
@@ -142,7 +142,7 @@ export function NotificationPanel({ open, onClose }: { open: boolean; onClose: (
             return (
               <div
                 key={n.id}
-                className="group flex items-start gap-2.5 px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-muted/50 transition-colors"
+                className="group flex items-start gap-2.5 px-4 py-2.5 border-b border-white/[0.06] last:border-0 hover:bg-muted/50 transition-colors"
               >
                 <div className={cn('mt-0.5 shrink-0', cfg.color)}>
                   <Icon className="h-4 w-4" />
