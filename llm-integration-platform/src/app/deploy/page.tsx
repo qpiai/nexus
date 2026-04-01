@@ -14,6 +14,7 @@ import {
   WifiOff, RefreshCw, ChevronDown, ChevronUp,
   CheckCircle2, ExternalLink,
 } from 'lucide-react';
+import { QRMobileLogin } from '@/components/qr-mobile-login';
 import { formatTimestamp } from '@/lib/utils';
 import { useNotifications } from '@/components/notifications';
 
@@ -77,8 +78,7 @@ interface ClientDownload {
 }
 
 const CLIENTS: ClientDownload[] = [
-  { id: 'android-v7', platform: 'android', label: 'Android v7', description: 'Agent + VLM + Vision + QR login', filename: 'nexus-v7.apk', url: '/nexus-v7.apk', version: '7.0.0', sizeMB: 28, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
-  { id: 'android-v4', platform: 'android', label: 'Android v4', description: 'VLM + OD/Seg + TFLite on-device', filename: 'nexus-v4.apk', url: '/nexus-v4.apk', version: '4.0.0', sizeMB: 28, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
+  { id: 'android-v7', platform: 'android', label: 'Android v7', description: 'Agent + VLM + Vision + QR login', filename: 'nexus-v7.apk', url: '/nexus-v7.apk', version: '7.0.0', sizeMB: 26, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
   { id: 'windows', platform: 'windows', label: 'Windows', description: 'Portable desktop client', filename: 'nexus-desktop-windows.tar.gz', url: '/nexus-desktop-windows.tar.gz', version: '1.1.0', sizeMB: 111, icon: <Monitor className="h-5 w-5" />, color: 'text-blue-400' },
   { id: 'linux', platform: 'linux', label: 'Linux', description: 'AppImage for all distros', filename: 'nexus-desktop-linux.AppImage', url: '/nexus-desktop-linux.AppImage', version: '1.1.0', sizeMB: 104, icon: <HardDrive className="h-5 w-5" />, color: 'text-orange-400' },
   { id: 'macos-arm64', platform: 'macos', label: 'macOS (Apple Silicon)', description: 'M1-M4 + Metal + MLX', filename: 'nexus-desktop-macos-arm64.zip', url: '/nexus-desktop-macos-arm64.zip', version: '1.1.0', sizeMB: 91, icon: <Apple className="h-5 w-5" />, color: 'text-gray-300' },
@@ -423,6 +423,9 @@ export default function DeployPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* ──── QR Mobile Sign-in ──── */}
+        <QRMobileLogin />
 
         {/* ──── SECTION 3: Connected Devices & Deploy ──── */}
         <Card className="animate-fade-in-up stagger-3 relative overflow-hidden">

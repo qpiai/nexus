@@ -8,6 +8,7 @@ import {
   Download, Monitor, Smartphone, Apple,
   Info, CheckCircle2, HardDrive,
 } from 'lucide-react';
+import { QRMobileLogin } from '@/components/qr-mobile-login';
 
 interface DownloadItem {
   id: string;
@@ -41,26 +42,6 @@ const DOWNLOADS: DownloadItem[] = [
       'Open the downloaded APK and tap Install',
       'Sign in with your email/password, scan a QR code, or continue offline',
       'Download a GGUF model and start chatting — toggle Agent mode for tool-augmented reasoning',
-      'For Vision: open Vision tab, download a TFLite model, and run detection or segmentation',
-    ],
-  },
-  {
-    id: 'android-v4',
-    platform: 'android',
-    label: 'Android v4 (VLM + Vision OD/Seg)',
-    description: 'Android app with VLM chat, on-device TFLite object detection & segmentation, server-side vision inference, and llama.cpp JNI.',
-    filename: 'nexus-v4.apk',
-    url: '/nexus-v4.apk',
-    version: '4.0.0',
-    sizeMB: 28,
-    icon: <Smartphone className="h-6 w-6" />,
-    color: 'text-emerald-400',
-    instructions: [
-      'Download the APK file to your Android device',
-      'Open Settings > Security > Enable "Install from Unknown Sources"',
-      'Open the downloaded APK and tap Install',
-      'Launch Nexus, enter your server URL and connect',
-      'For VLM: select a VLM model, attach images via the clip button, and chat',
       'For Vision: open Vision tab, download a TFLite model, and run detection or segmentation',
     ],
   },
@@ -324,44 +305,8 @@ export function DownloadsPanel() {
         </div>
       </div>
 
-      {/* iOS / MLX Section */}
-      <Card className="border-violet-500/20 bg-violet-500/5 relative overflow-hidden animate-fade-in-up">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-violet-500 to-purple-500" />
-        <CardContent className="p-6 md:p-7">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center text-violet-400 shrink-0 shadow-sm shadow-violet-500/10">
-              <Apple className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-base">iOS — Native On-Device Inference</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Two iOS apps for on-device LLM inference: <strong>Nexus</strong> (llama.cpp + GGUF models) and <strong>NexusChat</strong> (MLX framework).
-                Both use Metal GPU acceleration — no server needed. Simulator builds available above; build from source for physical devices.
-              </p>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 mt-4">
-            <div className="p-4 rounded-xl bg-background/50 border border-white/[0.06]">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Build from Source (Physical Device)</p>
-              <ol className="space-y-1.5 text-xs text-muted-foreground">
-                <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">1.</span>Clone the <code className="text-[10px] bg-accent px-1 rounded">nexus-ios</code> repo and run <code className="text-[10px] bg-accent px-1 rounded">xcodegen generate</code></li>
-                <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">2.</span>Open <code className="text-[10px] bg-accent px-1 rounded">Nexus.xcodeproj</code> in Xcode 16+ — dependencies resolve automatically</li>
-                <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">3.</span>Select your physical device and hit Cmd+R</li>
-                <li className="flex gap-2"><span className="text-violet-400 font-medium shrink-0">4.</span>Models download from HuggingFace on first launch</li>
-              </ol>
-            </div>
-            <div className="p-4 rounded-xl bg-background/50 border border-white/[0.06]">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Requirements</p>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />Xcode 16.0+ / Swift 6.0</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />iOS 18.0+ or macOS 15.0+</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />Apple Silicon device (M1+ Mac or A14+ iPhone/iPad)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />Dual mode: on-device inference or server SSE streaming</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* QR Mobile Sign-in */}
+      <QRMobileLogin />
 
       {/* Footer info */}
       <div className="text-center text-xs text-muted-foreground space-y-1 pb-8">

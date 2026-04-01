@@ -481,13 +481,7 @@ export function DevicesPanel() {
                   <a href="/nexus-v7.apk" download>
                     <Button size="sm" className="gap-2 rounded-xl px-4 nexus-gradient border-0 text-white">
                       <Download className="h-4 w-4" />
-                      v7 APK (Latest)
-                    </Button>
-                  </a>
-                  <a href="/nexus-v4.apk" download>
-                    <Button variant="outline" size="sm" className="gap-2 rounded-xl px-4">
-                      <Download className="h-4 w-4" />
-                      v4 APK (VLM+Vision)
+                      Android v7 APK
                     </Button>
                   </a>
                 </div>

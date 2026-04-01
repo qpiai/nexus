@@ -36,7 +36,7 @@ class NexusApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': 'admin',
-          'password': 'changeme123', // TODO: make credentials configurable
+          'password': 'admin-nexus-qpi',
         }),
       );
       if (response.statusCode == 200) {

@@ -2,6 +2,8 @@
 
 A multi-platform system for intelligent deployment, quantization, fine-tuning, and inference of large language models across heterogeneous hardware — from cloud GPUs to mobile phones.
 
+**[Watch the demo video](llm-integration-platform/public/NexusV3.mp4)** — a full walkthrough of the Nexus platform.
+
 ## Quick Start (Docker)
 
 The fastest way to run Nexus:
@@ -104,9 +106,9 @@ At minimum you need `GEMINI_API_KEY` for the AI agent workflow. Everything else 
 ```
 nexus/
 ├── llm-integration-platform/     # Web app & backend (Next.js 14 + Python)
-├── nexus-android-v4/             # Android client (Kotlin, llama.cpp JNI)
+├── nexus-android-v7/             # Android client (Kotlin, agent + VLM + vision + QR login)
 ├── nexus-ios/                    # iOS/macOS client (Swift 6 + MLX)
-├── nexus-desktop/                # Desktop client (Electron + node-llama-cpp)
+├── nexus-desktop-v2/             # Desktop client (Electron + node-llama-cpp)
 ├── nexus_mobile/                 # Cross-platform mobile (Flutter)
 ├── Dockerfile                    # Docker build (multi-stage)
 ├── docker-compose.yml            # One-command deployment
@@ -165,20 +167,20 @@ bash scripts/setup_all_venvs.sh        # All methods
 
 ---
 
-### Android — `nexus-android-v4/`
+### Android — `nexus-android-v7/`
 
-Kotlin Android app with on-device inference and vision capabilities.
+Kotlin Android app with on-device agent system, inference, and vision capabilities.
 
 **Features:**
-- On-device LLM inference via llama.cpp (NDK/JNI, ARM64)
+- On-device agent system (ReAct + 9 tools) with llama.cpp JNI
 - VLM chat with image attachment (base64 encoding)
 - On-device TFLite object detection + segmentation (YOLO)
 - Server-side vision inference
 - Confidence/IoU controls, vision model download/management
-- Device registration and QR code pairing
+- QR code login, email/password auth, and offline mode
 
 ```bash
-cd nexus-android-v4/app/src/main/cpp
+cd nexus-android-v7/app/src/main/cpp
 git clone https://github.com/ggerganov/llama.cpp
 cd ../../../../..
 ./gradlew assembleDebug
@@ -202,12 +204,12 @@ open nexus-ios/NexusApp/NexusApp.xcodeproj
 
 ---
 
-### Desktop — `nexus-desktop/`
+### Desktop — `nexus-desktop-v2/`
 
 Electron desktop application with local LLM inference via `node-llama-cpp`.
 
 ```bash
-cd nexus-desktop
+cd nexus-desktop-v2
 npm install
 npm start                    # Development
 npm run build                # Build all platforms

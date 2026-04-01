@@ -116,6 +116,45 @@ final class ModelDownloadManager {
         saveDownloadedModels()
     }
 
+    /// Download a model by filename (used for SSE push auto-downloads).
+    func downloadModel(serverUrl: String, filename: String, authToken: String? = nil) async throws {
+        guard activeDownloads[filename] == nil else { return }
+
+        progress[filename] = 0.0
+
+        let urlString = "\(serverUrl)/api/quantization/download?file=\(filename)"
+        guard let url = URL(string: urlString) else {
+            throw NexusError.downloadFailed("Invalid URL")
+        }
+
+        var request = URLRequest(url: url)
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let localURL: URL = try await withCheckedThrowingContinuation { continuation in
+            let task = session.downloadTask(with: request)
+            let taskId = task.taskIdentifier
+            progressHandlers[taskId] = filename
+            completionHandlers[taskId] = continuation
+            activeDownloads[filename] = task
+            task.resume()
+        }
+
+        // Move to models directory
+        let destination = Self.modelsDirectory.appendingPathComponent(filename)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.moveItem(at: localURL, to: destination)
+
+        downloadedModels.insert(filename)
+        progress.removeValue(forKey: filename)
+        activeDownloads.removeValue(forKey: filename)
+
+        saveDownloadedModels()
+    }
+
     func cancelDownload(for filename: String) {
         activeDownloads[filename]?.cancel()
         activeDownloads.removeValue(forKey: filename)

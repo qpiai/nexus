@@ -26,10 +26,10 @@ bash scripts/setup_all_venvs.sh    # Requires uv (https://docs.astral.sh/uv/)
 
 Or manually install packages with `pip install --target=venvs/<method>/lib/python3.x/site-packages`.
 
-### Android (v4)
+### Android (v7)
 
 ```bash
-cd nexus-android-v4/app/src/main/cpp
+cd nexus-android-v7/app/src/main/cpp
 git clone https://github.com/ggerganov/llama.cpp
 cd ../../../../..
 ./gradlew assembleDebug
@@ -48,7 +48,7 @@ open nexus-ios/NexusApp/NexusApp.xcodeproj
 ### Electron Desktop
 
 ```bash
-cd nexus-desktop
+cd nexus-desktop-v2
 npm install
 npm start
 ```

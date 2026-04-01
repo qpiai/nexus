@@ -73,6 +73,14 @@ final class AppState {
                 await apiClient.setAuthToken(savedToken)
             }
 
+            // Check if we have any auth token before attempting registration
+            let hasAuth = await apiClient.getAuthToken() != nil
+            if !hasAuth {
+                addLog("No auth token available — browsing models without registration")
+                connectionState = .connected
+                return
+            }
+
             metricsReporter.configure(apiClient: apiClient)
 
             let response = try await apiClient.register(serverUrl: url, savedDeviceId: deviceId)
@@ -94,6 +102,18 @@ final class AppState {
 
             // Start metrics reporting
             metricsReporter.startReporting(serverUrl: url, deviceId: response.id)
+        } catch let error as NexusError {
+            if case .serverError(401) = error {
+                // Auth expired — clear stale token and allow browsing
+                UserDefaults.standard.removeObject(forKey: "deviceToken")
+                await apiClient.setAuthToken(nil)
+                addLog("Authentication expired. Scan QR code to reconnect.")
+                addLog("You can still browse and download models.")
+                connectionState = .connected
+            } else {
+                connectionState = .error(error.localizedDescription)
+                addLog("Connection failed: \(error.localizedDescription)")
+            }
         } catch {
             connectionState = .error(error.localizedDescription)
             addLog("Connection failed: \(error.localizedDescription)")

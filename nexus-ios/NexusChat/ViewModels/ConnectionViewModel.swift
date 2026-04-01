@@ -42,12 +42,18 @@ final class ConnectionViewModel {
 
         apiService.serverURL = url
 
+        // Try registration if we have a token (from QR or saved)
         do {
-            try await apiService.login()
             try await apiService.registerDevice()
             successMessage = "Connected! Device ID: \(apiService.deviceId ?? "unknown")"
+        } catch APIError.notAuthenticated {
+            // No auth token — still connect for server-side chat (public endpoint)
+            apiService.isConnected = true
+            successMessage = "Connected (browse mode). Scan QR code for full access."
         } catch {
-            errorMessage = error.localizedDescription
+            // Registration failed but chat endpoint is public — still allow connection
+            apiService.isConnected = true
+            successMessage = "Connected (limited). Chat available via public endpoint."
         }
 
         isConnecting = false
