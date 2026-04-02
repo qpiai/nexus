@@ -22,6 +22,9 @@ let llamaPort = null;      // HTTP port for llama-server
 let activeModelFile = null;
 let chatAbortController = null;
 
+// Active download tracking (survives renderer navigation)
+const activeDownloads = new Map(); // filename -> { downloaded, total, percent }
+
 // Paths
 const modelsDir = path.join(app.getPath('userData'), 'models');
 const configPath = path.join(app.getPath('userData'), 'config.json');
@@ -174,6 +177,8 @@ ipcMain.handle('get-hardware', () => getHardwareInfo());
 ipcMain.handle('get-config', () => loadConfig());
 ipcMain.handle('save-config', (_, config) => { saveConfig(config); return true; });
 ipcMain.handle('get-models-dir', () => modelsDir);
+ipcMain.handle('get-active-downloads', () => Object.fromEntries(activeDownloads));
+ipcMain.handle('open-models-dir', () => shell.openPath(modelsDir));
 ipcMain.handle('get-auth-token', () => authToken);
 
 ipcMain.handle('set-auth-token', (_, token) => {
@@ -363,21 +368,27 @@ ipcMain.handle('download-model', async (event, filename) => {
       let downloaded = 0;
       const file = fs.createWriteStream(tempPath);
 
+      activeDownloads.set(filename, { downloaded: 0, total: totalBytes, percent: 0 });
+
       res.on('data', (chunk) => {
         downloaded += chunk.length;
         file.write(chunk);
+        const percent = totalBytes > 0 ? Math.round((downloaded / totalBytes) * 100) : 0;
+        activeDownloads.set(filename, { downloaded, total: totalBytes, percent });
         mainWindow?.webContents.send('download-progress', {
           filename,
           downloaded,
           total: totalBytes,
-          percent: totalBytes > 0 ? Math.round((downloaded / totalBytes) * 100) : 0,
+          percent,
         });
       });
 
       res.on('end', () => {
         file.end(() => {
+          activeDownloads.delete(filename);
           try {
             fs.renameSync(tempPath, filePath);
+            mainWindow?.webContents.send('download-complete', { filename });
             resolve({ path: filePath, size: downloaded });
           } catch (err) {
             reject(new Error(`Failed to save model: ${err.message}`));
@@ -386,11 +397,15 @@ ipcMain.handle('download-model', async (event, filename) => {
       });
 
       res.on('error', (e) => {
+        activeDownloads.delete(filename);
         file.destroy();
         try { fs.unlinkSync(tempPath); } catch (_) {}
         reject(e);
       });
-    }).on('error', reject);
+    }).on('error', (e) => {
+      activeDownloads.delete(filename);
+      reject(e);
+    });
   });
 });
 
@@ -888,6 +903,13 @@ function stopMetricsReporting() {
 
 app.whenReady().then(() => {
   if (!fs.existsSync(modelsDir)) fs.mkdirSync(modelsDir, { recursive: true });
+
+  // Clean up stale .tmp files from interrupted downloads
+  try {
+    fs.readdirSync(modelsDir).filter(f => f.endsWith('.tmp')).forEach(f => {
+      try { fs.unlinkSync(path.join(modelsDir, f)); } catch (_) {}
+    });
+  } catch (_) {}
 
   const config = loadConfig();
   serverUrl = config.serverUrl || '';

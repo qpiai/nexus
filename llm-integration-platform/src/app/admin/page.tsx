@@ -11,6 +11,7 @@ import {
   Mail, KeyRound, Activity, Search,
 } from 'lucide-react';
 import { getAvatarSrc } from '@/lib/constants';
+import { CountUp } from '@/components/ui/count-up';
 
 interface AdminUser {
   id: string;
@@ -184,7 +185,7 @@ export default function AdminPage() {
                   <card.icon className={`h-4 w-4 ${card.color}`} />
                   <span className="text-[11px] text-muted-foreground font-medium">{card.label}</span>
                 </div>
-                <p className="text-2xl font-bold">{card.value}</p>
+                <p className="text-2xl font-bold"><CountUp end={card.value} duration={800} /></p>
               </div>
             ))}
           </div>

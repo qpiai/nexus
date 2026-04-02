@@ -122,14 +122,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // MLX only works on macOS Apple Silicon — reject early on Linux
-  if (methodUpper === 'MLX' && process.platform !== 'darwin') {
-    return new Response(
-      JSON.stringify({ error: 'MLX quantization requires Apple Silicon (macOS). This server runs Linux. Use GGUF, AWQ, or GPTQ instead.' }),
-      { status: 400 }
-    );
-  }
-
   // Validate model supports the chosen method (case-insensitive comparison)
   const modelMeta = findModelByRepoId(repoId);
   if (modelMeta && !modelMeta.methods.some(m => m.toUpperCase() === methodUpper)) {

@@ -73,7 +73,7 @@ export default function ChatPage() {
     let target: { file: string; method?: string } | null = null;
     if (stored) {
       try { target = JSON.parse(stored); } catch { /* ignore */ }
-      sessionStorage.removeItem('nexus-chat-model');
+      // Don't remove yet — Strict Mode may re-run this effect
     }
 
     async function load(attempt = 0) {
@@ -87,11 +87,13 @@ export default function ChatPage() {
           const match = list.find(m => m.file === target!.file);
           if (match) {
             setSelectedModel(match.file);
+            sessionStorage.removeItem('nexus-chat-model');
           } else if (attempt < 2) {
             // File may not be visible yet after quantization — retry
             setTimeout(() => load(attempt + 1), 1500);
             return;
           } else if (list.length > 0) {
+            sessionStorage.removeItem('nexus-chat-model');
             setSelectedModel(list[0].file);
           }
         } else if (list.length > 0) {
@@ -124,6 +126,11 @@ export default function ChatPage() {
     // Warn if attaching image to non-VLM model
     if (imageFile && !modelInfo.isVLM) {
       setError(`${modelInfo.method} models don't support image input. Use an FP16/VLM model for vision tasks.`);
+      return;
+    }
+    // GGUF VLMs need FP16 for image input (llama.cpp doesn't support multimodal)
+    if (imageFile && modelInfo.isVLM && modelInfo.method === 'GGUF') {
+      setError('GGUF models cannot process images. Download this model as FP16 (16-bit) from the Quantize page for vision chat.');
       return;
     }
 
@@ -258,6 +265,19 @@ export default function ChatPage() {
       setStreaming(false);
       setStatusMessage(null);
       abortRef.current = null;
+      // Clean llama.cpp "EOF by user" artifact from final message
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant' && /EOF by user/i.test(last.content)) {
+          const cleaned = last.content.replace(/\n*>?\s*EOF by user\s*/gi, '').trimEnd();
+          if (cleaned !== last.content) {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...last, content: cleaned };
+            return updated;
+          }
+        }
+        return prev;
+      });
     }
   }, [input, streaming, selectedModel, messages, getSelectedModelInfo, imageFile, imagePreview]);
 
@@ -593,13 +613,13 @@ export default function ChatPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => imageInputRef.current?.click()}
-                  disabled={streaming || models.length === 0 || (modelInfo && !modelInfo.isVLM)}
+                  disabled={streaming || models.length === 0}
                   className={`shrink-0 rounded-xl h-10 w-10 transition-colors ${
                     modelInfo?.isVLM
                       ? 'text-primary hover:text-primary/80 hover:bg-primary/10'
-                      : 'text-muted-foreground/30 cursor-not-allowed'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
-                  title={modelInfo?.isVLM ? 'Attach image for VLM' : 'Select a VLM model to attach images'}
+                  title={modelInfo?.isVLM ? 'Attach image for VLM' : 'Attach image (VLM models only)'}
                 >
                   <ImagePlus className="h-4 w-4" />
                 </Button>

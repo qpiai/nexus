@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NexusSelect } from '@/components/ui/nexus-select';
 import { useNotifications } from '@/components/notifications';
+import { confettiSmall } from '@/lib/confetti';
 import {
   Play, Loader2, CheckCircle2, AlertCircle, Eye, Layers, Cpu,
   RotateCcw, Download, Rocket, ArrowRight, Target,
@@ -193,6 +194,7 @@ export function VisionExportPanel({ onSwitchTab, onModelExported }: VisionExport
                 }
                 if (data.size_mb) setExportedSize(data.size_mb);
                 addNotification('success', 'Vision Export Complete', data.message);
+                confettiSmall();
               } else if (eventType === 'error') {
                 setExportLogs(prev => [...prev.slice(-199), { type: 'error', message: data.message }]);
                 setExportError(data.message);

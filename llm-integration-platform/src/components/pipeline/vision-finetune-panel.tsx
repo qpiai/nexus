@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NexusSelect } from '@/components/ui/nexus-select';
 import { useNotifications } from '@/components/notifications';
+import { confettiSmall, confettiMedium } from '@/lib/confetti';
+import { ProgressRing } from '@/components/ui/progress-ring';
 import {
   Play, Loader2, CheckCircle2, AlertCircle, Upload, FolderOpen, Square,
-  TrendingDown, Target, BarChart3, Settings2, Cpu, ArrowRight, Layers, Download,
+  TrendingDown, Target, BarChart3, Settings2, Cpu, Download,
 } from 'lucide-react';
 import {
   SUPPORTED_VISION_MODELS, VISION_TRAIN_DEFAULTS, VISION_OPTIMIZER_OPTIONS,
@@ -61,10 +63,12 @@ interface TrainRun {
   dirName: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface VisionFinetunePanelProps {
   onSwitchTab?: (tab: string) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function VisionFinetunePanel({ onSwitchTab }: VisionFinetunePanelProps) {
   const { addNotification } = useNotifications();
 
@@ -242,6 +246,7 @@ export function VisionFinetunePanel({ onSwitchTab }: VisionFinetunePanelProps) {
               } else if (eventType === 'complete') {
                 setDatasetPrepareLogs(prev => [...prev, { type: 'complete', message: data.message, progress: 1.0 }]);
                 addNotification('success', 'Dataset Ready', data.message);
+                confettiSmall();
                 if (data.yamlPath) setSelectedDataset(data.yamlPath);
               } else if (eventType === 'error') {
                 setDatasetPrepareLogs(prev => [...prev, { type: 'error', message: data.message }]);
@@ -412,6 +417,7 @@ export function VisionFinetunePanel({ onSwitchTab }: VisionFinetunePanelProps) {
                   }));
                 }
                 addNotification('success', 'Training Complete', data.message);
+                confettiMedium();
               } else if (eventType === 'error') {
                 setTrainingLogs(prev => [...prev, { type: 'error', message: data.message }]);
                 setTrainingError(data.message);
@@ -721,6 +727,14 @@ export function VisionFinetunePanel({ onSwitchTab }: VisionFinetunePanelProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 md:p-7 pt-6 space-y-4">
+                <div className="flex items-start gap-4">
+                <ProgressRing
+                  value={trainingProgress * 100}
+                  status={trainingDone ? 'complete' : trainingError && !trainingDone ? 'error' : 'running'}
+                  size={72}
+                  label="Vision"
+                />
+                <div className="flex-1 space-y-4">
                 <div className={`w-full bg-muted rounded-full h-2.5 overflow-hidden ${training ? 'animate-progress-glow' : ''}`}>
                   <div className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden" style={{ width: `${trainingProgress * 100}%`, background: trainingError && !trainingDone ? 'var(--destructive)' : trainingDone ? 'var(--success)' : 'linear-gradient(90deg, #ec4899, #f43f5e)' }}>
                     {training && <div className="absolute inset-0 animate-shimmer" />}
@@ -747,20 +761,14 @@ export function VisionFinetunePanel({ onSwitchTab }: VisionFinetunePanelProps) {
                         <span className="text-muted-foreground ml-2">{trainResult.message as string}</span>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => onSwitchTab?.('export')}
-                      className="w-full bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 border-0 text-white"
-                    >
-                      <Layers className="h-4 w-4 mr-2" />
-                      Export This Model
-                      <ArrowRight className="h-4 w-4 ml-1" />
-                    </Button>
                   </div>
                 )}
 
                 {trainingError && !training && (
                   <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive">{trainingError}</div>
                 )}
+                </div>
+                </div>
               </CardContent>
             </Card>
 

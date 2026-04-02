@@ -9,6 +9,9 @@ import { Cpu, Layers, Play, Download, Loader2, CheckCircle2, AlertCircle, Messag
 import { DeviceInput } from '@/lib/types';
 import { estimateModelRAM, findModelByName } from '@/lib/constants';
 import { useNotifications } from '@/components/notifications';
+import { confettiMedium } from '@/lib/confetti';
+import { ProgressRing } from '@/components/ui/progress-ring';
+import { AnimatedCheck } from '@/components/ui/animated-check';
 
 const QUANT_DESCRIPTIONS: Record<number, string> = {
   2: 'Extreme compression — fastest, lowest quality. Best for edge/IoT devices.',
@@ -55,6 +58,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [outputFile, setOutputFile] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const autoStartedRef = useRef(false);
 
@@ -63,19 +67,48 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
     const storedRec = sessionStorage.getItem('nexus-recommendation');
     const storedFt = sessionStorage.getItem('nexus-finetuned');
     if (storedDevice) setDevice(JSON.parse(storedDevice));
-    if (storedRec) setRecommendation(storedRec);
     if (storedFt) {
       try {
         const ft = JSON.parse(storedFt) as FinetunedInfo;
         setFinetuned(ft);
-        if (!storedRec && ft.model) {
-          const modelName = ft.model.split('/').pop() || ft.model;
-          setRecommendation(`4-bit GGUF ${modelName}`);
-        }
+        // Always override recommendation with finetuned model name (the stored recommendation may be stale from the agent)
+        const modelName = ft.model.split('/').pop() || ft.model;
+        const recBits = storedRec ? parseRecommendation(storedRec).bits : 4;
+        const recMethod = storedRec ? parseRecommendation(storedRec).method : 'GGUF';
+        setRecommendation(`${recBits}-bit ${recMethod} ${modelName}`);
         if (!storedDevice) {
           setDevice({ deviceName: 'Server', ramGB: 64, gpuInfo: 'GPU', storageGB: 500, deviceType: 'server' });
         }
       } catch { /* ignore */ }
+    } else if (storedRec) {
+      setRecommendation(storedRec);
+    }
+
+    // Check if a previous quantization output already exists
+    let recToCheck = storedRec;
+    if (storedFt) {
+      try {
+        const ft = JSON.parse(storedFt) as FinetunedInfo;
+        const modelName = ft.model.split('/').pop() || ft.model;
+        const bits = storedRec ? parseRecommendation(storedRec).bits : 4;
+        const method = storedRec ? parseRecommendation(storedRec).method : 'GGUF';
+        recToCheck = `${bits}-bit ${method} ${modelName}`;
+      } catch { /* ignore */ }
+    }
+    if (recToCheck) {
+      const parsed = parseRecommendation(recToCheck);
+      fetch(`/api/quantization/check?model=${encodeURIComponent(parsed.model)}&method=${encodeURIComponent(parsed.method)}&bits=${parsed.bits}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.exists) {
+            setDone(true);
+            setFromCache(true);
+            setOutputFile(data.file);
+            setProgress(1.0);
+            autoStartedRef.current = true; // Prevent auto-start
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -171,6 +204,9 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
       requestBody.localModelPath = finetuned.path;
     }
 
+    // Clear finetuned info after incorporating it — prevents stale re-population on revisit
+    sessionStorage.removeItem('nexus-finetuned');
+
     fetch('/api/quantization/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -223,6 +259,7 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
                 addNotification('success',
                   parsed && (parsed.bits === 16 || parsed.method === 'FP16') ? 'Download Complete' : 'Quantization Complete',
                   data.message || 'Model ready');
+                confettiMedium();
               } else if (eventType === 'error') {
                 setLogs(prev => [...prev, { type: 'error', message: data.message }]);
                 setError(data.message);
@@ -417,6 +454,14 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-5">
+            <div className="flex items-start gap-4">
+            <ProgressRing
+              value={progress * 100}
+              status={done ? 'complete' : error && !done ? 'error' : 'running'}
+              size={72}
+              label={parsed?.method}
+            />
+            <div className="flex-1 space-y-4">
             {/* Progress bar */}
             <div className={`w-full bg-muted rounded-full h-2.5 overflow-hidden ${running ? 'animate-progress-glow' : ''}`}>
               <div
@@ -463,6 +508,8 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
               )}
               <div ref={logsEndRef} />
             </div>
+            </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -474,15 +521,13 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
           <CardContent className="p-6 md:p-7">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center animate-success-ring">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-                </div>
+                <AnimatedCheck size={48} delay={200} />
                 <div>
                   <p className="text-sm font-bold text-emerald-400">
                     {parsed && (parsed.bits === 16 || parsed.method === 'FP16') ? 'Download Complete' : 'Quantization Complete'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Your optimized model is ready to use
+                    {fromCache ? 'Previously quantized model found' : 'Your optimized model is ready to use'}
                   </p>
                 </div>
               </div>
@@ -516,6 +561,22 @@ export function QuantizePanel({ onSwitchTab }: QuantizePanelProps) {
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Chat with Model
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setDone(false);
+                      setFromCache(false);
+                      setOutputFile(null);
+                      setError(null);
+                      setLogs([]);
+                      setProgress(0);
+                      startQuantization();
+                    }}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Re-quantize
                   </Button>
                 </div>
               )}

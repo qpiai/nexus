@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { NexusSelect } from '@/components/ui/nexus-select';
 import { Header } from '@/components/header';
 import Image from 'next/image';
-import { ArrowRight, Cpu, HardDrive, MonitorSmartphone, Zap, Brain, Layers, Sparkles, Play } from 'lucide-react';
+import { ArrowRight, Cpu, HardDrive, MonitorSmartphone, Zap, Brain, Layers, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
@@ -42,31 +42,6 @@ export default function HomePage() {
   return (
     <>
       <Header title="Home" subtitle="Edge intelligence for every device" />
-
-      {/* Demo Video Hero */}
-      <div className="px-4 md:px-6 lg:px-8 pt-6 md:pt-8 page-container">
-        <Card className="overflow-hidden animate-fade-in-up relative">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-primary via-violet-500 to-cyan-400" />
-          <CardContent className="p-0">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.06]">
-              <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-                <Play className="h-3 w-3 text-primary" />
-              </div>
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Watch the Demo</span>
-            </div>
-            <video
-              className="w-full"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              src="/NexusV3.mp4"
-            />
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 md:p-6 lg:p-8 relative overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 nexus-mesh" />

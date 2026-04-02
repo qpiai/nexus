@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     const freshState = getAgentState(userId);
     freshState.running = true;
     freshState.startTime = Date.now();
+    freshState.runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const options = feedback || previousMessages
       ? { feedback, previousMessages }
@@ -62,11 +63,17 @@ export async function POST(req: NextRequest) {
   }
 
   // SSE stream: tail events from state using a cursor
+  const currentRunId = getAgentState(userId).runId;
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       let cursor = 0;
       let closed = false;
+
+      // Send runId as first event so client can track which run this is
+      try {
+        controller.enqueue(encoder.encode(`event: run_id\ndata: ${JSON.stringify({ runId: currentRunId })}\n\n`));
+      } catch { closed = true; }
 
       function sendNew() {
         const currentState = getAgentState(userId);

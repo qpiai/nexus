@@ -24,6 +24,11 @@ contextBridge.exposeInMainWorld('nexus', {
   onDownloadProgress: (callback) => {
     ipcRenderer.on('download-progress', (_, data) => callback(data));
   },
+  getActiveDownloads: () => ipcRenderer.invoke('get-active-downloads'),
+  onDownloadComplete: (callback) => {
+    ipcRenderer.on('download-complete', (_, data) => callback(data));
+  },
+  openModelsDir: () => ipcRenderer.invoke('open-models-dir'),
 
   // Llama inference (via llama-server subprocess)
   startLlamaServer: (modelFile) => ipcRenderer.invoke('start-llama-server', modelFile),

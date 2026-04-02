@@ -12,6 +12,7 @@ interface AgentRunState {
   error: string | null;
   done: boolean;
   startTime: number;
+  runId: string;
   abortController: AbortController | null;
 }
 
@@ -22,6 +23,7 @@ function createInitialState(): AgentRunState {
     error: null,
     done: false,
     startTime: 0,
+    runId: '',
     abortController: null,
   };
 }

@@ -2,8 +2,6 @@
 
 Hardware-aware LLM deployment platform for quantizing, fine-tuning, and deploying language models across heterogeneous devices — from edge to cloud.
 
-**[Watch the demo video](public/NexusV3.mp4)** — a walkthrough of the full platform (also plays on the home page).
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -154,16 +152,20 @@ npx pm2 start ecosystem.config.js
 
 ## Environment Variables
 
-Create `.env.local` in the project root (or `.env` if using Docker):
+Create `.env.local` in the project root:
 
 ```env
-# Gemini 2.0 Flash (required for AI agent workflow)
-GEMINI_API_KEY=your_gemini_key
+# Gemini 2.0 Flash — 3 keys for rate-limit rotation
+GEMINI_API_KEY_1=your_gemini_key_1
+GEMINI_API_KEY_2=your_gemini_key_2
+GEMINI_API_KEY_3=your_gemini_key_3
 
-# Tavily Web Search (optional — enables web search in agent research)
-TAVILY_API_KEY=your_tavily_key
+# Tavily Web Search — 3 keys for rate-limit rotation
+TAVILY_API_KEY_1=your_tavily_key_1
+TAVILY_API_KEY_2=your_tavily_key_2
+TAVILY_API_KEY_3=your_tavily_key_3
 
-# HuggingFace Hub (optional — for downloading gated models)
+# HuggingFace Hub — for downloading gated models
 HF_TOKEN=hf_your_token
 
 # Google OAuth (optional — for Google login)
@@ -171,7 +173,7 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
-API calls include automatic retries with exponential backoff for rate limits (429 errors).
+**Key rotation**: The platform rotates through 3 API keys for both Gemini and Tavily to handle rate limits (429 errors). You can use the same key for all 3 slots if you only have one.
 
 ## Python Virtual Environments
 
@@ -302,9 +304,11 @@ This means venvs don't need to be "activated" — they're loaded at script runti
 ### Deployment
 | Method | Endpoint | Description |
 |---|---|---|
+| `POST` | `/api/deploy/validate` | Validate deployment configuration |
 | `POST` | `/api/deploy/start` | Start a deployment |
 | `GET` | `/api/deploy/status` | Get deployment status |
 | `GET` | `/api/deploy/list` | List all deployments |
+| `GET` | `/api/deploy/download` | Download deployment bundle |
 
 ### Mobile
 | Method | Endpoint | Description |
@@ -460,26 +464,31 @@ Upload Dataset → Prepare (auto-detect format) → Train → Export → Inferen
 
 ## Companion Clients
 
-### Android v7 (`nexus-android-v7/`)
-- **Language**: Kotlin
-- **Architecture**: Activity-based with on-device agent system (ReAct + 9 tools)
-- **Features**: VLM chat, TFLite vision detection & segmentation, llama.cpp JNI, QR login, offline mode
-- **Build**: `./gradlew assembleDebug`
-
 ### iOS/macOS (`nexus-ios/`)
 - **Language**: Swift 6
 - **Targets**: NexusApp (device monitoring, vision, chat) and NexusChat (MLX on-device inference)
 - **On-device inference**: Uses `mlx-swift-lm` with 4 pre-configured models
 
-### Desktop (`nexus-desktop-v2/`)
-- **Framework**: Electron
-- **Local inference**: `node-llama-cpp`
-- **Targets**: Windows (NSIS), Linux (AppImage/deb), macOS (zip)
+### Android v2 (`nexus-android-v2/`)
+- **Language**: Kotlin
+- **Architecture**: Activity-based
+- **Features**: Chat + TFLite vision detection
+- **Build**: `./gradlew assembleDebug`
+
+### Android v3 (`nexus-android-v3/`)
+- **Language**: Kotlin
+- **Architecture**: Fragment-based with bottom navigation
+- **Features**: Same as v2, newer UI architecture
 
 ### Flutter (`nexus_mobile/`)
 - **State management**: Riverpod + Hive
 - **Charts**: fl_chart
 - **Build**: `flutter build apk`
+
+### Desktop (`nexus-desktop/`)
+- **Framework**: Electron
+- **Local inference**: `node-llama-cpp`
+- **Targets**: Windows (NSIS), Linux (AppImage/deb), macOS (zip)
 
 ## Production Deployment
 
@@ -556,6 +565,7 @@ llm-integration-platform/
 │   │   ├── types.ts                  # All TypeScript interfaces
 │   │   ├── constants.ts              # 93-model catalog, presets, limits
 │   │   ├── auth.ts                   # JWT auth (HMAC-SHA256)
+│   │   ├── store.ts                  # In-memory state
 │   │   ├── users.ts                  # User management
 │   │   ├── utils.ts                  # Formatting, ID generation
 │   │   ├── telemetry.ts              # Metrics collection
@@ -567,7 +577,6 @@ llm-integration-platform/
 │   │   ├── ui/                       # Primitives: button, card, input, select, etc.
 │   │   ├── pipeline/                 # agent-panel, quantize-panel, finetune-panel
 │   │   ├── monitor/                  # metrics-panel, devices-panel, downloads-panel
-│   │   ├── qr-mobile-login.tsx        # QR code device pairing
 │   │   ├── sidebar.tsx               # Navigation sidebar
 │   │   ├── header.tsx                # Top header
 │   │   ├── layout-shell.tsx          # Layout wrapper

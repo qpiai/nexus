@@ -19,6 +19,14 @@ let chatImageBase64 = null;
 let chatImageFileName = null;
 let metricsTimer = null;
 
+// Token listener registry (lives outside window.nexus which is a sealed contextBridge proxy)
+let _tokenListeners = [];
+function addTokenListener(fn) { _tokenListeners.push(fn); }
+function removeTokenListener(fn) { _tokenListeners = _tokenListeners.filter(f => f !== fn); }
+
+// Active download state — survives DOM rebuilds from page navigation
+let activeDownloadState = {}; // filename -> { downloaded, total, percent }
+
 const $ = (id) => document.getElementById(id);
 
 // ── Page Navigation ──
@@ -125,6 +133,7 @@ async function disconnectFromServer() {
   showMsg('Disconnected', 'info');
   log('Disconnected');
   renderServerModels();
+  restoreActiveDownloadUI();
 }
 
 // ── Connect to Server ──
@@ -253,6 +262,25 @@ function renderServerModels() {
   }).join('');
 }
 
+function restoreActiveDownloadUI() {
+  for (const filename of Object.keys(activeDownloadState)) {
+    const state = activeDownloadState[filename];
+    const progressDiv = document.getElementById(`progress-${filename}`);
+    const fill = document.getElementById(`fill-${filename}`);
+    const ptext = document.getElementById(`ptext-${filename}`);
+    const dlBtn = document.getElementById(`dl-${filename}`);
+
+    if (progressDiv) progressDiv.classList.remove('hidden');
+    if (fill) fill.style.width = `${state.percent}%`;
+    if (ptext) {
+      const dlMB = Math.round(state.downloaded / (1024 * 1024));
+      const totalMB = Math.round(state.total / (1024 * 1024));
+      ptext.textContent = `${dlMB} MB / ${totalMB} MB (${state.percent}%)`;
+    }
+    if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = '\u23F3'; }
+  }
+}
+
 async function refreshDownloaded() {
   try {
     const models = await window.nexus.listDownloaded();
@@ -281,6 +309,7 @@ async function refreshDownloaded() {
         </div>`).join('');
     }
     renderServerModels();
+    restoreActiveDownloadUI();
   } catch (e) {
     log(`List error: ${e.message}`);
   }
@@ -350,7 +379,12 @@ function renderChatList() {
 
 // ── Download ──
 async function downloadModel(filename) {
+  // Guard against duplicate downloads
+  if (activeDownloadState[filename]) return;
+
   log(`Downloading: ${filename}`);
+  activeDownloadState[filename] = { downloaded: 0, total: 0, percent: 0 };
+
   const dlBtn = document.getElementById(`dl-${filename}`);
   const progressDiv = document.getElementById(`progress-${filename}`);
   if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = '\u23F3'; }
@@ -359,15 +393,28 @@ async function downloadModel(filename) {
   try {
     await window.nexus.downloadModel(filename);
     log(`Download complete: ${filename}`);
+    delete activeDownloadState[filename];
     await refreshDownloaded();
   } catch (e) {
     log(`Download failed: ${e.message}`);
-    if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = 'Retry'; }
+    delete activeDownloadState[filename];
+    // Re-lookup button in case DOM was rebuilt
+    const retryBtn = document.getElementById(`dl-${filename}`);
+    if (retryBtn) { retryBtn.disabled = false; retryBtn.textContent = 'Retry'; }
   }
-  if (progressDiv) progressDiv.classList.add('hidden');
+  const pd = document.getElementById(`progress-${filename}`);
+  if (pd) pd.classList.add('hidden');
 }
 
 window.nexus.onDownloadProgress((data) => {
+  // Keep renderer-side state in sync for DOM rebuilds
+  if (activeDownloadState[data.filename]) {
+    activeDownloadState[data.filename] = {
+      downloaded: data.downloaded,
+      total: data.total,
+      percent: data.percent,
+    };
+  }
   const fill = document.getElementById(`fill-${data.filename}`);
   const text = document.getElementById(`ptext-${data.filename}`);
   if (fill) fill.style.width = `${data.percent}%`;
@@ -375,6 +422,14 @@ window.nexus.onDownloadProgress((data) => {
     const dlMB = Math.round(data.downloaded / (1024 * 1024));
     const totalMB = Math.round(data.total / (1024 * 1024));
     text.textContent = `${dlMB} MB / ${totalMB} MB (${data.percent}%)`;
+  }
+});
+
+// Download complete event from main process (fires even if renderer navigated away)
+window.nexus.onDownloadComplete((data) => {
+  delete activeDownloadState[data.filename];
+  if (document.getElementById('page-models')?.classList.contains('active')) {
+    refreshDownloaded();
   }
 });
 
@@ -453,7 +508,7 @@ async function openChat(modelFile, modelName, method, mode) {
 function closeChat() {
   $('chatView').classList.remove('active');
   clearChatImage();
-  window.nexus._tokenListeners = [];
+  _tokenListeners = [];
   showPage('chat-list');
 }
 
@@ -599,10 +654,10 @@ async function sendChat() {
 
         const tokenHandler = (data) => {
           if (data === '__DONE__') {
-            window.nexus._removeTokenListener?.(tokenHandler);
+            removeTokenListener(tokenHandler);
             resolve();
           } else if (data.startsWith('__ERROR__')) {
-            window.nexus._removeTokenListener?.(tokenHandler);
+            removeTokenListener(tokenHandler);
             reject(new Error(data.slice(9)));
           } else {
             fullResponse += data;
@@ -612,11 +667,7 @@ async function sendChat() {
           }
         };
 
-        window.nexus._tokenListeners = window.nexus._tokenListeners || [];
-        window.nexus._tokenListeners.push(tokenHandler);
-        window.nexus._removeTokenListener = (fn) => {
-          window.nexus._tokenListeners = window.nexus._tokenListeners.filter(f => f !== fn);
-        };
+        addTokenListener(tokenHandler);
 
         window.nexus.llamaChat(chatMessages.slice(0, -1)).catch(reject);
       });
@@ -723,9 +774,7 @@ function esc(s) {
 window.nexus.onLlamaLog((text) => log(`[llama] ${text.trim()}`));
 window.nexus.onLlamaStopped((msg) => log(`[llama] Stopped: ${msg}`));
 window.nexus.onLlamaToken((data) => {
-  if (window.nexus._tokenListeners) {
-    window.nexus._tokenListeners.forEach(fn => fn(data));
-  }
+  _tokenListeners.forEach(fn => fn(data));
 });
 
 // ── System Metrics (sidebar) ──
@@ -1010,6 +1059,11 @@ async function downloadVisionModel() {
   }
 }
 
+// ── Open models directory in OS file manager ──
+async function openModelsDir() {
+  try { await window.nexus.openModelsDir(); } catch (_) {}
+}
+
 // ── Init ──
 let currentPlatform = '';
 
@@ -1075,6 +1129,22 @@ async function init() {
 
     await refreshDownloaded();
     $('chatImageInput').addEventListener('change', handleChatImageSelect);
+
+    // Show models directory path in UI
+    try {
+      const modelsPath = await window.nexus.getModelsDir();
+      const pathEl = $('modelsDirPath');
+      if (pathEl && modelsPath) pathEl.textContent = modelsPath;
+    } catch (_) {}
+
+    // Sync active downloads from main process (in case app was reloaded mid-download)
+    try {
+      const downloads = await window.nexus.getActiveDownloads();
+      if (downloads && Object.keys(downloads).length > 0) {
+        activeDownloadState = downloads;
+        restoreActiveDownloadUI();
+      }
+    } catch (_) {}
 
     if (!connected && downloadedModels.size > 0) {
       log(`${downloadedModels.size} local model(s) ready for offline chat`);

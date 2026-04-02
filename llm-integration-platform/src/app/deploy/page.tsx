@@ -17,6 +17,7 @@ import {
 import { QRMobileLogin } from '@/components/qr-mobile-login';
 import { formatTimestamp } from '@/lib/utils';
 import { useNotifications } from '@/components/notifications';
+import { CountUp } from '@/components/ui/count-up';
 
 interface MobileModel {
   id: string;
@@ -79,8 +80,8 @@ interface ClientDownload {
 
 const CLIENTS: ClientDownload[] = [
   { id: 'android-v7', platform: 'android', label: 'Android v7', description: 'Agent + VLM + Vision + QR login', filename: 'nexus-v7.apk', url: '/nexus-v7.apk', version: '7.0.0', sizeMB: 26, icon: <Smartphone className="h-5 w-5" />, color: 'text-emerald-400' },
-  { id: 'windows', platform: 'windows', label: 'Windows', description: 'Portable desktop client', filename: 'nexus-desktop-windows.tar.gz', url: '/nexus-desktop-windows.tar.gz', version: '1.1.0', sizeMB: 111, icon: <Monitor className="h-5 w-5" />, color: 'text-blue-400' },
-  { id: 'linux', platform: 'linux', label: 'Linux', description: 'AppImage for all distros', filename: 'nexus-desktop-linux.AppImage', url: '/nexus-desktop-linux.AppImage', version: '1.1.0', sizeMB: 104, icon: <HardDrive className="h-5 w-5" />, color: 'text-orange-400' },
+  { id: 'windows', platform: 'windows', label: 'Windows', description: 'Portable desktop client', filename: 'nexus-desktop-windows.tar.gz', url: '/nexus-desktop-windows.tar.gz', version: '1.2.0', sizeMB: 123, icon: <Monitor className="h-5 w-5" />, color: 'text-blue-400' },
+  { id: 'linux', platform: 'linux', label: 'Linux', description: 'AppImage for all distros', filename: 'nexus-desktop-linux.AppImage', url: '/nexus-desktop-linux.AppImage', version: '1.2.0', sizeMB: 115, icon: <HardDrive className="h-5 w-5" />, color: 'text-orange-400' },
   { id: 'macos-arm64', platform: 'macos', label: 'macOS (Apple Silicon)', description: 'M1-M4 + Metal + MLX', filename: 'nexus-desktop-macos-arm64.zip', url: '/nexus-desktop-macos-arm64.zip', version: '1.1.0', sizeMB: 91, icon: <Apple className="h-5 w-5" />, color: 'text-gray-300' },
   { id: 'macos-x64', platform: 'macos', label: 'macOS (Intel)', description: 'Pre-2020 Intel Macs', filename: 'nexus-desktop-macos-x64.zip', url: '/nexus-desktop-macos-x64.zip', version: '1.1.0', sizeMB: 96, icon: <Apple className="h-5 w-5" />, color: 'text-gray-300' },
   { id: 'ios-llama', platform: 'ios', label: 'iOS (llama.cpp)', description: 'GGUF + Metal GPU', filename: 'nexus-ios-llama.zip', url: '/nexus-ios-llama.zip', version: '1.0.0', sizeMB: 3.6, icon: <Apple className="h-5 w-5" />, color: 'text-violet-400' },
@@ -238,7 +239,7 @@ export default function DeployPage() {
                   <Layers className="h-5 w-5 text-primary" />
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Models</p>
-                <p className="text-3xl font-bold tracking-tight mt-1">{models.length}</p>
+                <p className="text-3xl font-bold tracking-tight mt-1"><CountUp end={models.length} duration={800} /></p>
               </div>
             </CardContent>
           </Card>
@@ -251,7 +252,7 @@ export default function DeployPage() {
                   <Smartphone className="h-5 w-5 text-cyan-400" />
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Devices</p>
-                <p className="text-3xl font-bold tracking-tight text-cyan-400 mt-1">{onlineDevices.length}<span className="text-lg text-muted-foreground font-normal">/{devices.length}</span></p>
+                <p className="text-3xl font-bold tracking-tight text-cyan-400 mt-1"><CountUp end={onlineDevices.length} duration={800} /><span className="text-lg text-muted-foreground font-normal">/{devices.length}</span></p>
               </div>
             </CardContent>
           </Card>
@@ -264,7 +265,7 @@ export default function DeployPage() {
                   <Server className="h-5 w-5 text-emerald-400" />
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Active</p>
-                <p className="text-3xl font-bold tracking-tight text-emerald-400 mt-1">{deployments.filter(d => d.status === 'running').length}</p>
+                <p className="text-3xl font-bold tracking-tight text-emerald-400 mt-1"><CountUp end={deployments.filter(d => d.status === 'running').length} duration={800} /></p>
               </div>
             </CardContent>
           </Card>
@@ -277,7 +278,7 @@ export default function DeployPage() {
                   <Download className="h-5 w-5 text-violet-400" />
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Clients</p>
-                <p className="text-3xl font-bold tracking-tight mt-1">{CLIENTS.length}</p>
+                <p className="text-3xl font-bold tracking-tight mt-1"><CountUp end={CLIENTS.length} duration={800} /></p>
               </div>
             </CardContent>
           </Card>

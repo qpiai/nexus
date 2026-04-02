@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getAgentState } from '@/lib/agent-state';
+import { getAgentState, resetAgentState } from '@/lib/agent-state';
 import { getUserFromRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -14,5 +14,19 @@ export async function GET(req: NextRequest) {
     events: state.events,
     error: state.error,
     done: state.done,
+    runId: state.runId,
   });
+}
+
+// Clear stale state before starting a new run
+export async function DELETE(req: NextRequest) {
+  const user = await getUserFromRequest(req);
+  const userId = user?.userId || 'default';
+  const state = getAgentState(userId);
+
+  if (!state.running) {
+    resetAgentState(userId);
+  }
+
+  return Response.json({ ok: true });
 }

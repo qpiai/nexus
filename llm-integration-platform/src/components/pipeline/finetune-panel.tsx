@@ -16,6 +16,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { SUPPORTED_MODELS, FINETUNE_TYPES, POPULAR_DATASETS, FINETUNE_DEFAULTS, TRAINING_MODES, GRPO_REWARD_TYPES, VLM_DATASETS, VLM_FINETUNE_DEFAULTS } from '@/lib/constants';
 import type { HFDatasetMeta } from '@/lib/types';
 import { useNotifications } from '@/components/notifications';
+import { confettiMedium } from '@/lib/confetti';
+import { ProgressRing } from '@/components/ui/progress-ring';
+import { AnimatedCheck } from '@/components/ui/animated-check';
 import { SyntheticDataEditor } from '@/components/pipeline/synthetic-data-editor';
 
 interface LogEntry {
@@ -326,6 +329,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                 if (data.output_dir) setOutputDir(data.output_dir);
                 setFinalResult(data);
                 addNotification('success', 'Finetuning Complete', data.message || 'Model training finished successfully');
+                confettiMedium();
               } else if (eventType === 'error') {
                 setLogs(prev => [...prev, { type: 'error', message: data.message }]);
                 setError(data.message);
@@ -932,6 +936,14 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 md:p-7 pt-6 space-y-4">
+                <div className="flex items-start gap-4">
+                <ProgressRing
+                  value={progress * 100}
+                  status={done ? 'complete' : error && !done ? 'error' : 'running'}
+                  size={72}
+                  label="Training"
+                />
+                <div className="flex-1 space-y-4">
                 {/* Progress bar */}
                 <div className={`w-full bg-muted rounded-full h-2.5 overflow-hidden ${running ? 'animate-progress-glow' : ''}`}>
                   <div
@@ -980,6 +992,8 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                       Training...
                     </div>
                   )}
+                </div>
+                </div>
                 </div>
               </CardContent>
             </Card>
@@ -1070,9 +1084,7 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
               <CardContent className="p-6 md:p-7">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 shadow-sm shadow-emerald-500/10 flex items-center justify-center shrink-0 animate-success-ring">
-                      <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-                    </div>
+                    <AnimatedCheck size={48} delay={200} />
                     <div>
                       <p className="text-sm font-bold text-emerald-400">Finetuning Complete</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -1108,6 +1120,10 @@ export function FinetunePanel({ onSwitchTab }: FinetunePanelProps) {
                               method: finetuneType,
                             }));
                           }
+                          // Update recommendation to match the finetuned model (overrides stale agent recommendation)
+                          const modelName = SUPPORTED_MODELS.find(m => m.repoId === selectedModel)?.name || selectedModel.split('/').pop() || selectedModel;
+                          sessionStorage.setItem('nexus-recommendation', `4-bit GGUF ${modelName}`);
+                          sessionStorage.setItem('nexus-autostart-quantize', 'true');
                           goToQuantize();
                         }}
                       >

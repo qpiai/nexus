@@ -1,6 +1,6 @@
 {
   "name": "nexus-desktop-v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "QpiAI Nexus Desktop v2 - On-device LLM inference via llama-server",
   "main": "src/main.js",
   "scripts": {

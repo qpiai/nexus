@@ -11,6 +11,7 @@ import { NexusSelect } from '@/components/ui/nexus-select';
 import { AgentMessage, AgentRole, AgentWorkflow, DeviceInput } from '@/lib/types';
 import { AGENT_COLORS, SUPPORTED_MODELS, METHOD_BITS } from '@/lib/constants';
 import { useNotifications } from '@/components/notifications';
+import { confettiMedium } from '@/lib/confetti';
 
 const AGENT_ICONS: Record<AgentRole, React.ElementType> = {
   research: Bot,
@@ -59,6 +60,9 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
   // Auto-start tracking
   const autoStartedRef = useRef(false);
 
+  // Track the active run ID to prevent stale polling data from leaking in
+  const activeRunIdRef = useRef<string | null>(null);
+
   // Refine state
   const [feedbackText, setFeedbackText] = useState('');
 
@@ -90,36 +94,43 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
   useEffect(() => {
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
+    function applyServerState(data: { running: boolean; done: boolean; events: Array<{ type: string; data: unknown }>; runId?: string }) {
+      // Ignore stale data from a different run
+      if (activeRunIdRef.current && data.runId && data.runId !== activeRunIdRef.current) return;
+
+      if (data.running || data.done || data.events?.length > 0) {
+        // Track the run we're showing
+        if (data.runId) activeRunIdRef.current = data.runId;
+
+        const restoredMessages: AgentMessage[] = [];
+        let restoredWorkflow: AgentWorkflow | null = null;
+
+        for (const evt of data.events) {
+          if (evt.type === 'message') {
+            restoredMessages.push(evt.data as unknown as AgentMessage);
+          } else if (evt.type === 'status' || evt.type === 'workflow' || evt.type === 'complete') {
+            restoredWorkflow = evt.data as unknown as AgentWorkflow;
+          }
+        }
+
+        if (restoredMessages.length > 0) setMessages(restoredMessages);
+        if (restoredWorkflow) setWorkflow(restoredWorkflow);
+        setRunning(data.running || false);
+
+        const rec = parseRecommendation(restoredMessages);
+        if (rec) {
+          setRecommendation(rec);
+          sessionStorage.setItem('nexus-recommendation', rec);
+        }
+      }
+    }
+
     async function fetchStatus() {
       try {
         const res = await fetch('/api/agents/status');
         if (!res.ok) return;
         const data = await res.json();
-
-        if (data.running || data.done || data.events?.length > 0) {
-          // Replay events to reconstruct messages and workflow state
-          const restoredMessages: AgentMessage[] = [];
-          let restoredWorkflow: AgentWorkflow | null = null;
-
-          for (const evt of data.events) {
-            if (evt.type === 'message') {
-              restoredMessages.push(evt.data as unknown as AgentMessage);
-            } else if (evt.type === 'status' || evt.type === 'workflow' || evt.type === 'complete') {
-              restoredWorkflow = evt.data as unknown as AgentWorkflow;
-            }
-          }
-
-          if (restoredMessages.length > 0) setMessages(restoredMessages);
-          if (restoredWorkflow) setWorkflow(restoredWorkflow);
-          setRunning(data.running || false);
-
-          // Restore recommendation from replayed messages
-          const rec = parseRecommendation(restoredMessages);
-          if (rec) {
-            setRecommendation(rec);
-            sessionStorage.setItem('nexus-recommendation', rec);
-          }
-        }
+        applyServerState(data);
       } catch {
         // ignore
       }
@@ -131,29 +142,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
           const res = await fetch('/api/agents/status');
           if (!res.ok) return;
           const data = await res.json();
-
-          if (data.running || data.done || data.events?.length > 0) {
-            const restoredMessages: AgentMessage[] = [];
-            let restoredWorkflow: AgentWorkflow | null = null;
-
-            for (const evt of data.events) {
-              if (evt.type === 'message') {
-                restoredMessages.push(evt.data as unknown as AgentMessage);
-              } else if (evt.type === 'status' || evt.type === 'workflow' || evt.type === 'complete') {
-                restoredWorkflow = evt.data as unknown as AgentWorkflow;
-              }
-            }
-
-            if (restoredMessages.length > 0) setMessages(restoredMessages);
-            if (restoredWorkflow) setWorkflow(restoredWorkflow);
-            setRunning(data.running || false);
-
-            const rec = parseRecommendation(restoredMessages);
-            if (rec) {
-              setRecommendation(rec);
-              sessionStorage.setItem('nexus-recommendation', rec);
-            }
-          }
+          applyServerState(data);
 
           if (!data.running && pollInterval) {
             clearInterval(pollInterval);
@@ -208,7 +197,10 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
         } else if (line.startsWith('data: ')) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (eventType === 'message') {
+            // Capture run ID from the stream so polling stays in sync
+            if (eventType === 'run_id' && data.runId) {
+              activeRunIdRef.current = data.runId;
+            } else if (eventType === 'message') {
               setMessages(prev => {
                 const next = [...prev, data];
                 const rec = parseRecommendation(next);
@@ -225,6 +217,7 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
               setRunning(false);
               if (data.status === 'converged') {
                 addNotification('success', 'Analysis Complete', 'AI agents have converged on a recommendation');
+                confettiMedium();
               }
             }
           } catch {
@@ -236,8 +229,12 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
     setRunning(false);
   }, [addNotification]);
 
-  const startWorkflow = () => {
+  const startWorkflow = async () => {
     if (!device) return;
+
+    // Invalidate old run so polling won't restore stale data
+    activeRunIdRef.current = '__pending__';
+
     setRunning(true);
     setMessages([]);
     setWorkflow(null);
@@ -245,6 +242,9 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
     setActionMode(null);
 
     addNotification('info', 'Agent Analysis Started', `Analyzing ${device.deviceName} (${device.ramGB}GB RAM)`);
+
+    // Clear stale server state before starting a new run
+    try { await fetch('/api/agents/status', { method: 'DELETE' }); } catch { /* ignore */ }
 
     fetch('/api/agents/run', {
       method: 'POST',
@@ -286,14 +286,21 @@ export function AgentPanel({ onSwitchTab }: AgentPanelProps) {
     setActionMode('accepted');
   };
 
-  const handleRefineSubmit = () => {
+  const handleRefineSubmit = async () => {
     if (!device || !feedbackText.trim()) return;
+
+    // Invalidate old run so polling won't restore stale data
+    activeRunIdRef.current = '__pending__';
+
     setRunning(true);
     setWorkflow(null);
     setRecommendation(null);
     setActionMode(null);
 
     const previousMessages = [...messages];
+
+    // Clear stale server state before starting a new run
+    try { await fetch('/api/agents/status', { method: 'DELETE' }); } catch { /* ignore */ }
 
     fetch('/api/agents/run', {
       method: 'POST',

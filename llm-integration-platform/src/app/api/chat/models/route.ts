@@ -37,7 +37,9 @@ function scanOutputDir(outputDir: string, models: ModelInfo[]) {
       } else {
         displayName = parts.join('-') + ' ' + quantPart;
       }
-      models.push({ name: displayName, file: entry.name, method: 'GGUF', sizeMB });
+      const lowerName = entry.name.toLowerCase();
+      const isVLM = lowerName.includes('-vl-') || lowerName.includes('-vl_') || lowerName.includes('vision') || lowerName.includes('vlm');
+      models.push({ name: displayName, file: entry.name, method: 'GGUF', sizeMB, ...(isVLM ? { isVLM: true } : {}) });
     } else if (entry.isDirectory() && entry.name.endsWith('-fp16')) {
       const dirPath = path.join(outputDir, entry.name);
       const configPath = path.join(dirPath, 'config.json');

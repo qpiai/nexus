@@ -52,8 +52,8 @@ const DOWNLOADS: DownloadItem[] = [
     description: 'Portable Windows desktop client with login support. No installation required — extract and run.',
     filename: 'nexus-desktop-windows.tar.gz',
     url: '/nexus-desktop-windows.tar.gz',
-    version: '1.1.0',
-    sizeMB: 480,
+    version: '1.2.0',
+    sizeMB: 123,
     icon: <Monitor className="h-6 w-6" />,
     color: 'text-blue-400',
     instructions: [
@@ -70,8 +70,8 @@ const DOWNLOADS: DownloadItem[] = [
     description: 'Universal Linux package with login support. Works on Ubuntu, Fedora, Arch, and most distributions.',
     filename: 'nexus-desktop-linux.AppImage',
     url: '/nexus-desktop-linux.AppImage',
-    version: '1.1.0',
-    sizeMB: 462,
+    version: '1.2.0',
+    sizeMB: 115,
     icon: <HardDrive className="h-6 w-6" />,
     color: 'text-orange-400',
     instructions: [
@@ -310,7 +310,7 @@ export function DownloadsPanel() {
 
       {/* Footer info */}
       <div className="text-center text-xs text-muted-foreground space-y-1 pb-8">
-        <p>All desktop clients are v1.1.0 with email/password login and on-device inference.</p>
+        <p>All desktop clients are v1.2.0 with email/password login and on-device inference.</p>
         <p>Built with Electron 33 &middot; Android v7 (Agent+VLM+Vision) &middot; iOS via llama.cpp + Apple MLX</p>
       </div>
     </div>
