@@ -15,7 +15,7 @@ import { QRMobileLogin } from '@/components/qr-mobile-login';
 // HTTPS host that serves the same filenames — your own GH/GL release, R2, S3…).
 const RELEASES_BASE =
   process.env.NEXT_PUBLIC_RELEASES_BASE ||
-  'https://github.com/pavancshekar-dev/nexus-clients/releases/download/clients-v1';
+  'https://github.com/qpiai/nexus/releases/download/clients-v1';
 
 interface DownloadItem {
   id: string;
