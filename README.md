@@ -7,7 +7,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 
-[![Nexus demo](llm-integration-platform/public/NexusV7.gif)](llm-integration-platform/public/NexusV7.mp4)
+<a href="llm-integration-platform/public/NexusV7.mp4">
+  <img src="llm-integration-platform/public/NexusV7.gif" alt="Nexus demo" width="100%" />
+</a>
 
 ▶ **[Watch the full video with audio](llm-integration-platform/public/NexusV7.mp4)** (1 min · 1080p)
 
@@ -133,27 +135,43 @@ nexus/
 
 ```mermaid
 graph LR
-    A["👤 User's Hardware Specs"] --> B["🧭 Nexus Platform"]
+    A["👤 Your Hardware"] --> B["🧭 Nexus Platform"]
     B --> C{"🤖 4-Agent Pipeline"}
     C --> D["🔍 Research"]
     C --> E["🧠 Reasoning"]
     C --> F["🛡️ Critic"]
     C --> G["📋 Orchestrator"]
-    D --> H["⚙️ Optimal Deployment Config"]
+    D --> H["⚙️ Deployment Plan"]
     E --> H
     F --> H
     G --> H
-    H --> I["🔧 Quantize"]
-    H --> J["🎓 Fine-tune"]
-    H --> K["🖼️ Vision Train"]
-    I --> L["📦 Model Artifact"]
-    J --> L
+    H --> I["🎓 Fine-tune<br/>LoRA · QLoRA"]
+    H --> J["🔧 Quantize<br/>GGUF · AWQ · GPTQ · BitNet · MLX"]
+    H --> K["🖼️ Vision Train<br/>YOLO"]
+    I --> J
+    J --> L["📦 Model Artifact"]
     K --> L
-    L --> M["📱 iOS — MLX"]
-    L --> N["🤖 Android — TFLite + llama.cpp"]
-    L --> O["💻 Desktop — node-llama-cpp"]
-    L --> P["☁️ Cloud — Server"]
+    L --> M["🚀 Deploy"]
+    M --> N["📱 iOS — MLX"]
+    M --> O["🤖 Android — TFLite + llama.cpp"]
+    M --> P["💻 Desktop — node-llama-cpp"]
+    M --> Q["☁️ Cloud — Server"]
+    N --> R["📊 Live Monitor<br/>CPU · GPU · Memory · Power · Tokens/sec"]
+    O --> R
+    P --> R
+    Q --> R
+    R -.feedback.-> B
+
+    classDef pink fill:#E84393,stroke:#ffffff,color:#ffffff,stroke-width:2px
+    classDef blue fill:#A0C4E8,stroke:#ffffff,color:#040c18,stroke-width:2px
+    classDef plan fill:#7c4dff,stroke:#ffffff,color:#ffffff,stroke-width:2px
+
+    class A,D,E,F,G,L,N,O,P,Q blue
+    class B,C,I,J,K,M,R pink
+    class H plan
 ```
+
+**How the flow reads:** tell Nexus your hardware → the 4-agent pipeline (Research · Reasoning · Critic · Orchestrator) produces a deployment plan → you can **fine-tune first and then quantize**, **quantize a base model directly**, or **train a vision model** — all converge into one model artifact → deploy to any target device → live telemetry flows back, so the next plan gets smarter.
 
 **On-device inference everywhere:**
 
@@ -167,35 +185,13 @@ All clients talk to the web platform over REST + SSE and can also run inference 
 
 ## 🗺️ Roadmap
 
-Nexus is being built in phases — here's where we're headed.
+Where Nexus is headed next:
 
-### 🔜 Next: every device
+1. 📱 **Every device** — full iOS, Windows, and desktop Linux clients
+2. ⚡ **Smarter runtimes** — faster on-device inference with hardware-aware agents that pick the best model and quantization automatically, in the spirit of **[Claude Code](https://www.anthropic.com/claude-code)**, **[OpenClaw](https://github.com/openclaw/openclaw)** — but running on *your* hardware
+3. 🌐 **Federated fleet** — one control plane across hundreds of user devices, with privacy-first fine-tuning that never leaves the device
 
-- 📱 **Full iOS parity** — the whole platform available natively on iPhone and iPad
-- 🪟 **Windows desktop** — first-class client alongside macOS
-- 🐧 **Desktop Linux** — AppImage and `.deb` packages
-
-### ⚙️ Then: the runtime layer
-
-- ⚡ **Faster on-device inference** — hardware-specific kernels, smarter scheduling
-- 🧩 **Richer quantization runtimes** — new methods plugged in as they land
-- 🔋 **Power & thermal awareness** — inference that respects battery and heat
-
-### 🤖 After deployment: power agents
-
-Once a model is on your device, make it *do things*. Turn every deployed model into a capable agent with tools, memory, and action loops — the same spirit as Claude Code and Open Interpreter, but running on *your* hardware.
-
-- Tool-using agents that can browse, code, file-system, and automate
-- Long-running background agents tied to local triggers
-- An open plug-in ecosystem so anyone can ship a new capability
-
-### 🌐 Longer horizon
-
-- Federated fleet management — one control plane across hundreds of user devices
-- Privacy-first fine-tuning on personal data, never leaves the device
-- Community-curated model + agent marketplace
-
-We share progress, ship new phases, and take feedback in the open — follow along in [Issues](https://github.com/qpiai/nexus/issues) and [Discussions](https://github.com/qpiai/nexus/discussions).
+Follow along in [Issues](https://github.com/qpiai/nexus/issues) and [Discussions](https://github.com/qpiai/nexus/discussions).
 
 ---
 
