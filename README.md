@@ -2,7 +2,12 @@
 
 A multi-platform system for intelligent deployment, quantization, fine-tuning, and inference of large language models across heterogeneous hardware — from cloud GPUs to mobile phones.
 
-**[Watch the demo video](llm-integration-platform/public/NexusV3.mp4)** — a full walkthrough of the Nexus platform.
+<video src="llm-integration-platform/public/NexusV6.mp4" controls muted playsinline width="100%">
+  Your browser does not support embedded video.
+  <a href="llm-integration-platform/public/NexusV6.mp4">Watch the demo video</a>.
+</video>
+
+*A full walkthrough of the Nexus platform — hardware-aware model selection, quantization, fine-tuning, vision training, multi-device deployment, and real-time monitoring.*
 
 ## Quick Start (Docker)
 
