@@ -133,26 +133,26 @@ nexus/
 
 ```mermaid
 graph LR
-    A[👤 User's Hardware Specs] --> B[🧭 Nexus Platform]
-    B --> C{🤖 4-Agent Pipeline}
-    C --> D[🔍 Research]
-    C --> E[🧠 Reasoning]
-    C --> F[🛡️ Critic]
-    C --> G[📋 Orchestrator]
-    D --> H[⚙️ Optimal Deployment Config]
+    A["👤 User's Hardware Specs"] --> B["🧭 Nexus Platform"]
+    B --> C{"🤖 4-Agent Pipeline"}
+    C --> D["🔍 Research"]
+    C --> E["🧠 Reasoning"]
+    C --> F["🛡️ Critic"]
+    C --> G["📋 Orchestrator"]
+    D --> H["⚙️ Optimal Deployment Config"]
     E --> H
     F --> H
     G --> H
-    H --> I[🔧 Quantize]
-    H --> J[🎓 Fine-tune]
-    H --> K[🖼️ Vision Train]
-    I --> L[📦 Model Artifact]
+    H --> I["🔧 Quantize"]
+    H --> J["🎓 Fine-tune"]
+    H --> K["🖼️ Vision Train"]
+    I --> L["📦 Model Artifact"]
     J --> L
     K --> L
-    L --> M[📱 iOS · MLX]
-    L --> N[🤖 Android · TFLite + llama.cpp]
-    L --> O[💻 Desktop · node-llama-cpp]
-    L --> P[☁️ Cloud · Server]
+    L --> M["📱 iOS — MLX"]
+    L --> N["🤖 Android — TFLite + llama.cpp"]
+    L --> O["💻 Desktop — node-llama-cpp"]
+    L --> P["☁️ Cloud — Server"]
 ```
 
 **On-device inference everywhere:**
@@ -162,6 +162,40 @@ graph LR
 - **Desktop** — node-llama-cpp (CPU / GPU)
 
 All clients talk to the web platform over REST + SSE and can also run inference locally without a server connection.
+
+---
+
+## 🗺️ Roadmap
+
+Nexus is being built in phases — here's where we're headed.
+
+### 🔜 Next: every device
+
+- 📱 **Full iOS parity** — the whole platform available natively on iPhone and iPad
+- 🪟 **Windows desktop** — first-class client alongside macOS
+- 🐧 **Desktop Linux** — AppImage and `.deb` packages
+
+### ⚙️ Then: the runtime layer
+
+- ⚡ **Faster on-device inference** — hardware-specific kernels, smarter scheduling
+- 🧩 **Richer quantization runtimes** — new methods plugged in as they land
+- 🔋 **Power & thermal awareness** — inference that respects battery and heat
+
+### 🤖 After deployment: power agents
+
+Once a model is on your device, make it *do things*. Turn every deployed model into a capable agent with tools, memory, and action loops — the same spirit as Claude Code and Open Interpreter, but running on *your* hardware.
+
+- Tool-using agents that can browse, code, file-system, and automate
+- Long-running background agents tied to local triggers
+- An open plug-in ecosystem so anyone can ship a new capability
+
+### 🌐 Longer horizon
+
+- Federated fleet management — one control plane across hundreds of user devices
+- Privacy-first fine-tuning on personal data, never leaves the device
+- Community-curated model + agent marketplace
+
+We share progress, ship new phases, and take feedback in the open — follow along in [Issues](https://github.com/qpiai/nexus/issues) and [Discussions](https://github.com/qpiai/nexus/discussions).
 
 ---
 
@@ -297,4 +331,4 @@ Check out our other open-source projects at **[github.com/qpiai](https://github.
 
 ## 📜 License
 
-Copyright 2024–2026 QpiAI. Licensed under the [Apache License 2.0](LICENSE).
+Copyright 2026 QpiAI. Licensed under the [Apache License 2.0](LICENSE).
