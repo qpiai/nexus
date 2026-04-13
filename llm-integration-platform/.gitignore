@@ -43,3 +43,14 @@ next-env.d.ts
 
 # User data (accounts, sessions)
 /data/
+
+# Pre-built client binaries — served from GitHub Releases, not from the repo
+# (override via NEXT_PUBLIC_RELEASES_BASE). Keeps the source clone small and
+# avoids hitting GitHub's 100 MB per-file limit.
+/public/*.apk
+/public/*.AppImage
+/public/*.zip
+/public/*.tar.gz
+/public/*.dmg
+/public/*.exe
+/public/*.deb

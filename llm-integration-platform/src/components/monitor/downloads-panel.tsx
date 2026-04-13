@@ -10,13 +10,19 @@ import {
 } from 'lucide-react';
 import { QRMobileLogin } from '@/components/qr-mobile-login';
 
+// Default to the public GitHub Release that hosts our pre-built client binaries.
+// Override per-deployment with NEXT_PUBLIC_RELEASES_BASE in .env (point at any
+// HTTPS host that serves the same filenames — your own GH/GL release, R2, S3…).
+const RELEASES_BASE =
+  process.env.NEXT_PUBLIC_RELEASES_BASE ||
+  'https://github.com/pavancshekar-dev/nexus-clients/releases/download/clients-v1';
+
 interface DownloadItem {
   id: string;
   platform: string;
   label: string;
   description: string;
   filename: string;
-  url: string;
   version: string;
   sizeMB: number;
   icon: React.ReactNode;
@@ -31,7 +37,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'Android v7 (Latest)',
     description: 'Full-featured Android client with login/QR pairing, on-device agent system (ReAct + 9 tools), VLM chat, TFLite vision detection & segmentation, llama.cpp JNI, and offline mode.',
     filename: 'nexus-v7.apk',
-    url: '/nexus-v7.apk',
     version: '7.0.0',
     sizeMB: 28,
     icon: <Smartphone className="h-6 w-6" />,
@@ -51,7 +56,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'Windows (Portable)',
     description: 'Portable Windows desktop client with login support. No installation required — extract and run.',
     filename: 'nexus-desktop-windows.tar.gz',
-    url: '/nexus-desktop-windows.tar.gz',
     version: '1.2.0',
     sizeMB: 123,
     icon: <Monitor className="h-6 w-6" />,
@@ -69,7 +73,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'Linux (AppImage)',
     description: 'Universal Linux package with login support. Works on Ubuntu, Fedora, Arch, and most distributions.',
     filename: 'nexus-desktop-linux.AppImage',
-    url: '/nexus-desktop-linux.AppImage',
     version: '1.2.0',
     sizeMB: 115,
     icon: <HardDrive className="h-6 w-6" />,
@@ -87,7 +90,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'macOS (Apple Silicon)',
     description: 'Native build for M1/M2/M3/M4 Macs. Supports Metal GPU acceleration and MLX on-device inference.',
     filename: 'nexus-desktop-macos-arm64.zip',
-    url: '/nexus-desktop-macos-arm64.zip',
     version: '1.1.0',
     sizeMB: 91,
     icon: <Apple className="h-6 w-6" />,
@@ -105,7 +107,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'macOS (Intel)',
     description: 'Build for Intel-based Macs (pre-2020 models).',
     filename: 'nexus-desktop-macos-x64.zip',
-    url: '/nexus-desktop-macos-x64.zip',
     version: '1.1.0',
     sizeMB: 96,
     icon: <Apple className="h-6 w-6" />,
@@ -123,7 +124,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'iOS — Nexus (llama.cpp)',
     description: 'On-device LLM inference using llama.cpp with Metal GPU acceleration. Runs GGUF quantized models locally.',
     filename: 'nexus-ios-llama.zip',
-    url: '/nexus-ios-llama.zip',
     version: '1.0.0',
     sizeMB: 3.6,
     icon: <Apple className="h-6 w-6" />,
@@ -141,7 +141,6 @@ const DOWNLOADS: DownloadItem[] = [
     label: 'iOS — NexusChat (MLX)',
     description: 'On-device inference using Apple MLX framework. Supports Qwen 3.5, Gemma 3, LFM and more via HuggingFace.',
     filename: 'nexus-ios-mlx.zip',
-    url: '/nexus-ios-mlx.zip',
     version: '1.0.0',
     sizeMB: 7.5,
     icon: <Apple className="h-6 w-6" />,
@@ -154,6 +153,10 @@ const DOWNLOADS: DownloadItem[] = [
     ],
   },
 ];
+
+function downloadUrl(item: DownloadItem): string {
+  return `${RELEASES_BASE}/${item.filename}`;
+}
 
 function detectPlatform(): string {
   if (typeof navigator === 'undefined') return 'unknown';
@@ -171,9 +174,52 @@ function formatSize(mb: number): string {
   return `${mb} MB`;
 }
 
+/**
+ * Probes each release URL with HEAD to find which binaries are actually
+ * uploaded. Missing builds (e.g. iOS still pending) get greyed out with a
+ * tooltip instead of giving the user a 404.
+ */
+function useAvailability(items: DownloadItem[]) {
+  const [available, setAvailable] = useState<Set<string>>(new Set());
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(
+        items.map(async (item) => {
+          try {
+            // 'no-cors' ⇒ opaque response; we only need the network round-trip
+            // not to throw. GitHub Releases serve via 302 → S3, both succeed
+            // for existing files and fail for missing ones.
+            const res = await fetch(downloadUrl(item), {
+              method: 'HEAD',
+              redirect: 'follow',
+              mode: 'cors',
+            });
+            return [item.id, res.ok] as const;
+          } catch {
+            return [item.id, false] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setAvailable(new Set(results.filter(([, ok]) => ok).map(([id]) => id)));
+      setChecked(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { available, checked };
+}
+
 export function DownloadsPanel() {
   const [detectedPlatform, setDetectedPlatform] = useState<string>('unknown');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { available, checked } = useAvailability(DOWNLOADS);
 
   useEffect(() => {
     setDetectedPlatform(detectPlatform());
@@ -181,6 +227,42 @@ export function DownloadsPanel() {
 
   const recommended = DOWNLOADS.find(d => d.platform === detectedPlatform);
   const otherDownloads = DOWNLOADS.filter(d => d.id !== recommended?.id);
+  const isAvailable = (id: string) => !checked || available.has(id);
+
+  const renderDownloadButton = (item: DownloadItem, large: boolean) => {
+    const ok = isAvailable(item.id);
+    const url = downloadUrl(item);
+    if (!ok) {
+      return (
+        <Button
+          variant={large ? 'default' : 'outline'}
+          size={large ? 'lg' : 'sm'}
+          className={`gap-2 shrink-0 ${large ? '' : 'w-full text-xs'}`}
+          disabled
+          title="Build pending — this binary hasn't been uploaded to the release yet."
+        >
+          <Download className={large ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
+          Build pending
+        </Button>
+      );
+    }
+    return (
+      <a href={url} download className={large ? '' : 'flex-1'}>
+        <Button
+          variant={large ? 'default' : 'outline'}
+          size={large ? 'lg' : 'sm'}
+          className={
+            large
+              ? 'gap-2 shrink-0 nexus-gradient border-0 text-white shadow-md shadow-primary/20'
+              : 'w-full gap-2 text-xs'
+          }
+        >
+          <Download className={large ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
+          Download
+        </Button>
+      </a>
+    );
+  };
 
   return (
     <div className="page-container px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6 md:space-y-8">
@@ -221,12 +303,7 @@ export function DownloadsPanel() {
                   <span className="text-xs text-muted-foreground">{recommended.filename}</span>
                 </div>
               </div>
-              <a href={recommended.url} download>
-                <Button size="lg" className="gap-2 shrink-0 nexus-gradient border-0 text-white shadow-md shadow-primary/20">
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
-              </a>
+              {renderDownloadButton(recommended, true)}
             </div>
           </CardContent>
         </Card>
@@ -268,12 +345,7 @@ export function DownloadsPanel() {
                   </div>
 
                   <div className="flex items-center gap-2 mt-5">
-                    <a href={item.url} download className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full gap-2 text-xs">
-                        <Download className="h-3.5 w-3.5" />
-                        Download
-                      </Button>
-                    </a>
+                    {renderDownloadButton(item, false)}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -312,6 +384,7 @@ export function DownloadsPanel() {
       <div className="text-center text-xs text-muted-foreground space-y-1 pb-8">
         <p>All desktop clients are v1.2.0 with email/password login and on-device inference.</p>
         <p>Built with Electron 33 &middot; Android v7 (Agent+VLM+Vision) &middot; iOS via llama.cpp + Apple MLX</p>
+        <p>Hosted on <a className="underline hover:text-foreground" href={RELEASES_BASE} target="_blank" rel="noopener noreferrer">GitHub Releases</a> &middot; configurable via <code className="text-[10px]">NEXT_PUBLIC_RELEASES_BASE</code></p>
       </div>
     </div>
   );
