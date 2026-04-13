@@ -133,45 +133,39 @@ nexus/
 
 ## 🏗️ Architecture
 
+<div align="center">
+
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'22px','fontFamily':'Inter, Helvetica, Arial, sans-serif','lineColor':'#64748b'}}}%%
 graph LR
-    A["👤 Your Hardware"] --> B["🧭 Nexus Platform"]
-    B --> C{"🤖 4-Agent Pipeline"}
-    C --> D["🔍 Research"]
-    C --> E["🧠 Reasoning"]
-    C --> F["🛡️ Critic"]
-    C --> G["📋 Orchestrator"]
-    D --> H["⚙️ Deployment Plan"]
-    E --> H
-    F --> H
-    G --> H
-    H --> I["🎓 Fine-tune<br/>LoRA · QLoRA"]
-    H --> J["🔧 Quantize<br/>GGUF · AWQ · GPTQ · BitNet · MLX"]
-    H --> K["🖼️ Vision Train<br/>YOLO"]
-    I --> J
-    J --> L["📦 Model Artifact"]
-    K --> L
-    L --> M["🚀 Deploy"]
-    M --> N["📱 iOS — MLX"]
-    M --> O["🤖 Android — TFLite + llama.cpp"]
-    M --> P["💻 Desktop — node-llama-cpp"]
-    M --> Q["☁️ Cloud — Server"]
-    N --> R["📊 Live Monitor<br/>CPU · GPU · Memory · Power · Tokens/sec"]
-    O --> R
-    P --> R
-    Q --> R
-    R -.feedback.-> B
+    A["👤 Your Hardware"] --> B["🤖 Nexus AI Agents"]
+    B --> C["⚙️ Plan"]
+    C --> D["🎓 Fine-tune"]
+    C --> E["🔧 Quantize"]
+    C --> F["🖼️ Vision Train"]
+    D --> E
+    E --> G["📦 Model"]
+    F --> G
+    G --> H["🚀 Deploy"]
+    H --> I["📱 iOS"]
+    H --> J["🤖 Android"]
+    H --> K["💻 Desktop"]
+    H --> L["☁️ Cloud"]
+    I --> M["📊 Monitor"]
+    J --> M
+    K --> M
+    L --> M
 
-    classDef pink fill:#E84393,stroke:#ffffff,color:#ffffff,stroke-width:2px
-    classDef blue fill:#A0C4E8,stroke:#ffffff,color:#040c18,stroke-width:2px
-    classDef plan fill:#7c4dff,stroke:#ffffff,color:#ffffff,stroke-width:2px
+    classDef pink fill:#E84393,stroke:#E84393,color:#ffffff,stroke-width:3px,font-size:22px
+    classDef blue fill:#1e3a8a,stroke:#1e3a8a,color:#ffffff,stroke-width:3px,font-size:22px
 
-    class A,D,E,F,G,L,N,O,P,Q blue
-    class B,C,I,J,K,M,R pink
-    class H plan
+    class B,D,E,F,H,M pink
+    class A,C,G,I,J,K,L blue
 ```
 
-**How the flow reads:** tell Nexus your hardware → the 4-agent pipeline (Research · Reasoning · Critic · Orchestrator) produces a deployment plan → you can **fine-tune first and then quantize**, **quantize a base model directly**, or **train a vision model** — all converge into one model artifact → deploy to any target device → live telemetry flows back, so the next plan gets smarter.
+</div>
+
+**How the flow reads:** tell Nexus your hardware → the AI agents build a plan → **fine-tune then quantize**, **quantize directly**, or **train a vision model** — all converge into one model → deploy to any device → live monitor across the fleet.
 
 **On-device inference everywhere:**
 
