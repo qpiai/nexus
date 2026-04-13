@@ -264,7 +264,7 @@ export function parseNavigations(text: string): { cleanText: string; paths: stri
 
 // ---- Action Executor ----
 
-const PORT = process.env.PORT || '6001';
+const PORT = process.env.PORT || '7777';
 const BASE_URL = `http://localhost:${PORT}`;
 
 async function executeAction(

@@ -103,7 +103,7 @@ function friendlyError(msg) {
   if (msg.includes('CERT') || msg.includes('SSL') || msg.includes('self-signed'))
     return 'SSL error. Try http:// instead of https://';
   if (msg.includes('Invalid email') || msg.includes('Invalid password') || msg.includes('401'))
-    return 'Login failed. Try username "admin" with password "admin-nexus-qpi".';
+    return 'Login failed. Try username "admin" with password "qpiai-nexus".';
   if (msg.includes('not found') && (msg.includes('user') || msg.includes('User')))
     return 'User not found. Try username "admin" instead of email.';
   if (msg.includes('Timeout'))

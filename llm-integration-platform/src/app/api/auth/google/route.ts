@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   // Build the redirect URI using forwarded headers (for cloudflared tunnel)
   const proto = request.headers.get('x-forwarded-proto') || 'http';
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:6001';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:7777';
   const redirectUri = `${proto}://${host}/api/auth/callback/google`;
 
   // Generate CSRF state token

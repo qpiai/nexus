@@ -522,7 +522,7 @@ CMD ["npm", "start"]
 ### Port configuration
 
 - **Development**: `npm run dev` (default port 3000)
-- **Production**: Configure in `ecosystem.config.js` (currently port 6001)
+- **Production**: Configure in `ecosystem.config.js` (currently port 7777)
 
 ## Project Structure
 

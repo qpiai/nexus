@@ -97,19 +97,58 @@ Default login: `admin` / `qpiai-nexus`.
 
 ---
 
-## 🔑 API Keys
+## 🔑 API Keys & LLM Provider
 
-Configure in `.env` (Docker) or `llm-integration-platform/.env.local` (local dev):
+Configure in `.env` (Docker) or `llm-integration-platform/.env.local` (local dev).
+
+### Pick any LLM provider — it's all env-driven
+
+The agent pipeline is provider-agnostic (built on the [Vercel AI SDK](https://sdk.vercel.ai/)). Switch providers by changing four variables — no code changes needed.
+
+```bash
+LLM_PROVIDER=google                      # google | openai | anthropic | openai-compatible
+LLM_MODEL=gemini-3.1-flash-lite-preview  # any model name the provider accepts
+LLM_API_KEY=...                          # required
+LLM_API_BASE=                            # only for openai-compatible (see below)
+```
+
+**Supported out of the box:**
+
+| Provider | How | Example model |
+|---|---|---|
+| 🤖 **Google Gemini** | `LLM_PROVIDER=google` + [AI Studio key](https://aistudio.google.com/apikey) | `gemini-3.1-flash-lite-preview`, `gemini-flash-latest` |
+| 🟢 **OpenAI** | `LLM_PROVIDER=openai` + [OpenAI key](https://platform.openai.com/api-keys) | `gpt-4o-mini`, `gpt-4o`, `o1-mini` |
+| 🟣 **Anthropic Claude** | `LLM_PROVIDER=anthropic` + [Anthropic key](https://console.anthropic.com/) | `claude-sonnet-4-5`, `claude-haiku-4-5` |
+| 🔌 **Anything OpenAI-compatible** | `LLM_PROVIDER=openai-compatible` + `LLM_API_BASE=…` | LiteLLM, OpenRouter, Ollama, vLLM, TGI, LocalAI |
+
+**Examples for the escape-hatch route:**
+
+```bash
+# LiteLLM proxy
+LLM_PROVIDER=openai-compatible
+LLM_API_BASE=http://litellm:4000/v1
+LLM_MODEL=gpt-4o-mini
+
+# OpenRouter (500+ models behind one URL)
+LLM_PROVIDER=openai-compatible
+LLM_API_BASE=https://openrouter.ai/api/v1
+LLM_MODEL=anthropic/claude-sonnet-4.5
+
+# Local Ollama
+LLM_PROVIDER=openai-compatible
+LLM_API_BASE=http://localhost:11434/v1
+LLM_MODEL=llama3.1
+```
+
+### Other keys
 
 | Key | Provider | Purpose | Required? |
 |---|---|---|---|
-| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) | AI agent reasoning (Gemini 2.0 Flash) | **Yes** |
 | `TAVILY_API_KEY` | [Tavily](https://tavily.com/) | Web search for agent research | Optional |
 | `HF_TOKEN` | [HuggingFace](https://huggingface.co/settings/tokens) | Downloading gated models | Optional |
-| `GOOGLE_CLIENT_ID` | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) | Google OAuth login | Optional |
-| `GOOGLE_CLIENT_SECRET` | Same as above | Google OAuth login | Optional |
+| `GOOGLE_CLIENT_ID` / `_SECRET` | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) | Google OAuth login | Optional |
 
-Only `GEMINI_API_KEY` is required. Everything else is opt-in.
+Only `LLM_API_KEY` (for your chosen provider) is required. Everything else is opt-in.
 
 ---
 

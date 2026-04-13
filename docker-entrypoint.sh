@@ -121,6 +121,6 @@ else
 fi
 
 echo ""
-info "Starting Nexus on port 7777..."
+info "Starting Nexus on port ${PORT:-7777}..."
 
 exec "$@"

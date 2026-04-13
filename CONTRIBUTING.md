@@ -37,7 +37,7 @@ Tiny PRs are genuinely welcome. Drive-by doc fixes count too.
 cd llm-integration-platform
 npm install
 cp .env.example .env.local      # add your API keys
-npm run dev                     # http://localhost:6001
+npm run dev                     # http://localhost:7777
 ```
 
 Needs: Node.js 18+, Python 3.10+

@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
     }
     // Pages redirect to login — use forwarded headers for correct URL behind tunnel
     const proto = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:6001';
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:7777';
     const loginUrl = new URL('/login', `${proto}://${host}`);
     return NextResponse.redirect(loginUrl);
   }

@@ -59,7 +59,7 @@ class InferenceService {
 
   String get _serverUrl {
     final box = Hive.box('settings');
-    return box.get('serverUrl', defaultValue: 'http://localhost:6001');
+    return box.get('serverUrl', defaultValue: 'http://localhost:7777');
   }
 
   /// Fetch available models from the Nexus server

@@ -59,7 +59,8 @@ RUN mkdir -p /app/output /app/data /app/venvs
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-EXPOSE 7777
+ENV PORT=7777
+EXPOSE ${PORT}
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["node_modules/.bin/next", "start", "-p", "7777"]
+CMD ["sh", "-c", "node_modules/.bin/next start -p ${PORT}"]

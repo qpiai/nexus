@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   // Build external-facing base URL from forwarded headers (for cloudflared tunnel)
   const proto = request.headers.get('x-forwarded-proto') || 'http';
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:6001';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:7777';
   const baseUrl = `${proto}://${host}`;
 
   if (!clientId || !clientSecret) {

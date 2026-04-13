@@ -36,7 +36,7 @@ class NexusApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': 'admin',
-          'password': 'admin-nexus-qpi',
+          'password': 'qpiai-nexus',
         }),
       );
       if (response.statusCode == 200) {

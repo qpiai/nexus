@@ -4,7 +4,7 @@
 
 | Item | Details |
 |------|---------|
-| **Web App** | Your Cloudflare tunnel URL, port 6001 |
+| **Web App** | Your Cloudflare tunnel URL, port 7777 |
 | **Login** | Username: `admin` / Password: `changeme123` |
 | **APK Download** | `<tunnel-url>/nexus-v2.apk` (no auth required) |
 | **Auth Cookie** | `nexus_auth`, HttpOnly, 7-day expiry |

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   // Determine the server's public URL
   const forwardedHost = req.headers.get('x-forwarded-host');
   const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-  const host = forwardedHost || req.headers.get('host') || 'localhost:6001';
+  const host = forwardedHost || req.headers.get('host') || 'localhost:7777';
   const proto = forwardedHost ? forwardedProto : (host.startsWith('localhost') ? 'http' : 'https');
   const serverUrl = `${proto}://${host}`;
 

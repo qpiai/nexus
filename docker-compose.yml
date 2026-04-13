@@ -2,7 +2,7 @@ services:
   nexus:
     build: .
     ports:
-      - "7777:7777"
+      - "${PORT:-7777}:${PORT:-7777}"
     env_file:
       - .env
     environment:
