@@ -1,0 +1,44 @@
+# Built application files
+*.apk
+*.aab
+*.aar
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files (Android-only — scoped to this subtree's app/)
+app/build/
+gen/
+app/release/
+
+# Gradle build outputs
+.gradle/
+build/
+
+# Local configuration (SDK paths)
+local.properties
+
+# IntelliJ / Android Studio
+*.iml
+.idea/
+captures/
+
+# Keystores — never commit secrets
+*.jks
+*.keystore
+
+# Native build (CMake / NDK)
+.externalNativeBuild
+.cxx/
+
+# Google services
+google-services.json
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
