@@ -160,4 +160,4 @@ By contributing, you agree that your work is released under the [Apache License 
 
 ---
 
-Thanks for reading all the way through. Now go build something great ❤️
+Thanks for reading all the way through. Let's build something together ❤️
