@@ -1,6 +1,6 @@
 # QpiAI Nexus
 
-**The open-source edge intelligence platform — from cloud GPUs to phones.**
+**Democratize AI — one workflow to quantize, fine-tune, and deploy from cloud GPUs to phones.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/🤗-Hugging_Face-yellow)](https://huggingface.co/qpiai)
@@ -15,158 +15,93 @@
 
 ---
 
-## 🎯 Our Mission
+## 🎯 Mission
 
-> Nexus exists to **democratize AI** and **empower every device**. Any model, any hardware — from cloud GPUs to the phone in your pocket — deployed with one workflow, no cloud lock-in required.
+> **Democratize AI by empowering every device.**
+> Any model, any hardware — from a cloud GPU to the phone in your pocket — deployed with one workflow, no cloud lock-in.
 
----
-
-## ✨ What you can do with Nexus
-
-- 🤖 Let an AI agent pick the right model + quantization for your hardware
-- 🔧 Quantize with **GGUF, AWQ, GPTQ, BitNet, MLX**, or keep **FP16**
-- 🎓 Fine-tune with **LoRA** or **QLoRA** directly in your browser
-- 🖼️ Train **YOLO** vision models and export to ONNX, TensorRT, CoreML, TFLite, OpenVINO, NCNN
-- 📱 Deploy the same workflow to **iOS, Android, desktop, edge, or cloud**
-- 📊 Watch **CPU, GPU, memory, power, and throughput** live across every device
+Every section below is a way Nexus delivers that mission.
 
 ---
 
-## 🚀 Quick Start (Docker)
+## Why Nexus
+
+If you've used Ollama for inference or Unsloth for training, Nexus is the glue plus an **agent that decides what to run where**. Point it at your hardware; it picks the right model, the right quantization, and the right runtime — then deploys to whichever device is in front of you.
+
+- 🤖 **Hardware-aware agent** — pick a model, describe your target device, get a recommended backend + bit-width
+- 🔧 **6 quantization paths** — GGUF, AWQ, GPTQ, BitNet, MLX, or FP16 — each in its own isolated Python venv
+- 🎓 **Fine-tune in the browser** — LoRA, QLoRA, or Full; SFT or GRPO; your dataset or synthetic
+- 📱 **Deploy everywhere** — iOS / macOS (MLX), Android (llama.cpp JNI + TFLite), Desktop (Electron), Flutter
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone
 git clone https://github.com/qpiai/nexus.git && cd nexus
-
-# 2. Add your API keys
-cp .env.example .env    # add at least GEMINI_API_KEY
-
-# 3. Start Nexus
-docker compose up -d
-
-# 4. Open in browser
+cp .env.example .env             # add at least LLM_API_KEY
+docker compose up -d             # default: GGUF venv, ~1 GB, 2-3 min first run
 open http://localhost:7777
 ```
 
-On first startup the GGUF Python environment installs automatically (~1 GB, 2–3 minutes). Subsequent starts are instant — venvs persist in a Docker volume.
+**Default login:** `admin` / `qpiai-nexus` (change on first login → Profile → Change Password).
 
-### First login
-
-| | |
-|---|---|
-| **Username** | `admin` |
-| **Password** | `qpiai-nexus` |
-
-Please change the password on first login → click your avatar → **Profile** → **Change Password**.
-
-### Choose which backends to install
+<details>
+<summary>Other setup options</summary>
 
 ```bash
-docker compose up -d                              # GGUF only (default, ~1 GB)
-SETUP_VENVS=gguf,awq docker compose up -d         # GGUF + AWQ
-SETUP_VENVS=all docker compose up -d              # Everything (~3 GB)
-SETUP_VENVS= docker compose up -d                 # Web UI only, instant start
+SETUP_VENVS=gguf,awq docker compose up -d    # GGUF + AWQ
+SETUP_VENVS=all docker compose up -d         # everything (~3 GB)
+SETUP_VENVS= docker compose up -d            # web UI only, instant start
+docker compose logs -f                       # tail logs
+docker compose down -v                       # reset (wipes models, venvs, users)
 ```
 
-### Everyday commands
-
+**Local dev (no Docker):**
 ```bash
-docker compose up -d           # Start in background
-docker compose logs -f         # Follow logs
-docker compose down            # Stop
-docker compose up -d --build   # Rebuild after code changes
-docker compose down -v         # Reset (wipes models, venvs, user data)
+cd llm-integration-platform && npm install
+cp .env.example .env.local
+bash scripts/setup_venvs.sh gguf             # or: setup_venvs.sh (all)
+PORT=7777 npm run dev
 ```
+</details>
 
 ---
 
-## 🛠️ Local Development
+## 🔧 Quantization
 
-```bash
-cd llm-integration-platform
-npm install
-cp .env.example .env.local      # add API keys
-PORT=7777 npm run dev           # start dev server
+Pick a model, pick a target device — Nexus handles the rest. Each backend runs in its own Python venv so incompatible `transformers` / `autoawq` / `auto-gptq` versions never collide.
 
-# Optional: set up Python venvs for quantization
-bash scripts/setup_venvs.sh gguf    # just GGUF (~1 GB)
-bash scripts/setup_venvs.sh         # all methods
-```
-
-Default login: `admin` / `qpiai-nexus`.
-
----
-
-## 🔑 API Keys & LLM Provider
-
-Configure in `.env` (Docker) or `llm-integration-platform/.env.local` (local dev).
-
-### Pick any LLM provider — it's all env-driven
-
-The agent pipeline is provider-agnostic (built on the [Vercel AI SDK](https://sdk.vercel.ai/)). Switch providers by changing four variables — no code changes needed.
-
-```bash
-LLM_PROVIDER=google                      # google | openai | anthropic | openai-compatible
-LLM_MODEL=gemini-3.1-flash-lite-preview  # any model name the provider accepts
-LLM_API_KEY=...                          # required
-LLM_API_BASE=                            # only for openai-compatible (see below)
-```
-
-**Supported out of the box:**
-
-| Provider | How | Example model |
-|---|---|---|
-| 🤖 **Google Gemini** | `LLM_PROVIDER=google` + [AI Studio key](https://aistudio.google.com/apikey) | `gemini-3.1-flash-lite-preview`, `gemini-flash-latest` |
-| 🟢 **OpenAI** | `LLM_PROVIDER=openai` + [OpenAI key](https://platform.openai.com/api-keys) | `gpt-4o-mini`, `gpt-4o`, `o1-mini` |
-| 🟣 **Anthropic Claude** | `LLM_PROVIDER=anthropic` + [Anthropic key](https://console.anthropic.com/) | `claude-sonnet-4-5`, `claude-haiku-4-5` |
-| 🔌 **Anything OpenAI-compatible** | `LLM_PROVIDER=openai-compatible` + `LLM_API_BASE=…` | LiteLLM, OpenRouter, Ollama, vLLM, TGI, LocalAI |
-
-**Examples for the escape-hatch route:**
-
-```bash
-# LiteLLM proxy
-LLM_PROVIDER=openai-compatible
-LLM_API_BASE=http://litellm:4000/v1
-LLM_MODEL=gpt-4o-mini
-
-# OpenRouter (500+ models behind one URL)
-LLM_PROVIDER=openai-compatible
-LLM_API_BASE=https://openrouter.ai/api/v1
-LLM_MODEL=anthropic/claude-sonnet-4.5
-
-# Local Ollama
-LLM_PROVIDER=openai-compatible
-LLM_API_BASE=http://localhost:11434/v1
-LLM_MODEL=llama3.1
-```
-
-### Other keys
-
-| Key | Provider | Purpose | Required? |
+| Backend | Bit-widths | Hardware | Best for |
 |---|---|---|---|
-| `TAVILY_API_KEY` | [Tavily](https://tavily.com/) | Web search for agent research | Optional |
-| `HF_TOKEN` | [HuggingFace](https://huggingface.co/settings/tokens) | Downloading gated models | Optional |
-| `GOOGLE_CLIENT_ID` / `_SECRET` | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) | Google OAuth login | Optional |
+| **GGUF** | 2 · 3 · 4 · 5 · 8 · 16 | CPU or GPU | Cross-platform — llama.cpp runs everywhere |
+| **AWQ** | 4 · 8 | NVIDIA GPU (CUDA required) | Server-side throughput |
+| **GPTQ** | 2 · 3 · 4 · 8 | GPU preferred | Accuracy-sensitive post-training quantization |
+| **BitNet** | 1 | CPU | Ultra-light edge / research |
+| **MLX** | 2 · 3 · 4 · 5 · 6 · 8 | Apple Silicon | macOS / iOS on-device |
+| **FP16** | 16 | GPU | Unquantized baseline |
 
-Only `LLM_API_KEY` (for your chosen provider) is required. Everything else is opt-in.
+**Model catalog** — 35 supported models out of the box: LLaMA 3.1/3.2/3.3, Qwen 2.5/3/3.5, Mistral, Phi-3/4, Gemma 2/3/3n, DeepSeek-R1, SmolLM 2/3, LFM, plus 4 VLMs (Qwen 2.5 VL, SmolVLM, Gemma 3 Vision). Any HuggingFace repo ID works too.
+
+**How the flow runs:** describe your device → the 4-agent pipeline (research → reasoning → critic → orchestrator) recommends backend + bit-width → you click Run → SSE-streamed progress → quantized model lands in your downloads.
 
 ---
 
-## 📁 Repository Structure
+## 🎓 Fine-tuning
 
-```
-nexus/
-├── llm-integration-platform/     # Web app & backend (Next.js 14 + Python)
-├── nexus-android-v7/             # Android (Kotlin · agent + VLM + vision + QR login)
-├── nexus-ios/                    # iOS / macOS (Swift 6 + MLX)
-├── nexus-desktop-v2/             # Desktop (Electron + node-llama-cpp)
-├── nexus_mobile/                 # Cross-platform mobile (Flutter)
-├── Dockerfile                    # Docker build (multi-stage)
-├── docker-compose.yml            # One-command deployment
-├── docker-entrypoint.sh          # Auto venv setup on first run
-├── LICENSE                       # Apache 2.0
-└── CONTRIBUTING.md               # Contribution guidelines
-```
+Unsloth under the hood. Run it in the browser, watch the loss curve, download the adapter — or merge and re-quantize for deployment.
+
+| Method | What it is | Use when |
+|---|---|---|
+| **QLoRA** | 4-bit quantized LoRA — lowest VRAM | Consumer GPUs (recommended default) |
+| **LoRA** | Low-rank adapter | You've got more VRAM and want faster training |
+| **Full** | Full-parameter training | Adapters aren't enough — best quality, most VRAM |
+
+**Training modes** — **SFT** (supervised instruction/response) and **GRPO** (reward-model RL with length / correctness / format rewards).
+
+**Datasets** — 5 curated HF datasets one-click (Alpaca Cleaned, Dolly 15k, OpenAssistant, OpenHermes 2.5, Dolphin), or upload your own `.json` / `.jsonl`, or **generate synthetic data from seed examples** inside the app.
+
+**Vision fine-tuning** — train YOLO26 / YOLO11 (detect or segment) on your images. Auto-detects COCO / YOLO / VOC dataset formats. Export in one click to **ONNX, TensorRT, CoreML, TFLite, OpenVINO, or NCNN** — everything you need for mobile and edge.
 
 ---
 
@@ -204,160 +139,78 @@ graph LR
 
 </div>
 
-**How the flow reads:** tell Nexus your hardware → the AI agents build a plan → **fine-tune then quantize**, **quantize directly**, or **train a vision model** — all converge into one model → deploy to any device → live monitor across the fleet.
+---
 
-**On-device inference everywhere:**
+## 🚀 Deploy anywhere
 
-- **iOS / macOS** — MLX (Apple Silicon GPUs)
-- **Android** — TFLite (vision) + llama.cpp via NDK (LLMs)
-- **Desktop** — node-llama-cpp (CPU / GPU)
+Every device gets a first-class client. All talk to the web platform over REST + SSE and can also run inference locally with no server connection.
 
-All clients talk to the web platform over REST + SSE and can also run inference locally without a server connection.
+| Platform | Stack | On-device inference | Build |
+|---|---|---|---|
+| **Web / Backend** | Next.js 14 · Python · llama.cpp | — | `cd llm-integration-platform && npm run dev` |
+| **iOS / macOS** — `nexus-ios/` | Swift 6 · [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) | MLX on Apple Silicon | `open nexus-ios/Package.swift` in Xcode |
+| **Android** — `nexus-android-v7/` | Kotlin · llama.cpp JNI · TFLite | LLMs + YOLO vision | `./gradlew assembleDebug` |
+| **Desktop** — `nexus-desktop-v2/` | Electron · node-llama-cpp | CPU / GPU | `cd nexus-desktop-v2 && npm start` |
+| **Flutter** — `nexus_mobile/` | Flutter · Riverpod · Hive | Remote (REST) | `flutter pub get && flutter build apk` |
+
+---
+
+## ⚙️ Configuration
+
+<details>
+<summary><b>LLM provider — pick any (Gemini, OpenAI, Anthropic, or any OpenAI-compatible endpoint)</b></summary>
+
+Four env vars in `.env` switch providers — no code changes. The agent pipeline is built on the [Vercel AI SDK](https://sdk.vercel.ai/).
+
+```bash
+LLM_PROVIDER=google                          # google | openai | anthropic | openai-compatible
+LLM_MODEL=gemini-3.1-flash-lite-preview      # any model the provider accepts
+LLM_API_KEY=...                              # required
+LLM_API_BASE=                                # only for openai-compatible
+```
+
+| Provider | `LLM_PROVIDER` | Example model |
+|---|---|---|
+| Google Gemini | `google` | `gemini-3.1-flash-lite-preview`, `gemini-flash-latest` |
+| OpenAI | `openai` | `gpt-4o-mini`, `gpt-4o`, `o1-mini` |
+| Anthropic Claude | `anthropic` | `claude-sonnet-4-5`, `claude-haiku-4-5` |
+| Anything OpenAI-compatible | `openai-compatible` + `LLM_API_BASE` | LiteLLM, OpenRouter, Ollama, vLLM, TGI, LocalAI |
+
+</details>
+
+<details>
+<summary><b>Other env vars</b></summary>
+
+| Key | Purpose | Required? |
+|---|---|---|
+| `TAVILY_API_KEY` | Web search for agent research ([tavily.com](https://tavily.com/)) | Optional |
+| `HF_TOKEN` | Gated HF models ([token page](https://huggingface.co/settings/tokens)) | Optional |
+| `GOOGLE_CLIENT_ID` / `_SECRET` | Google OAuth login | Optional |
+| `SETUP_VENVS` | Which Python venvs to install (`gguf` / `gguf,awq` / `all` / empty) | Optional |
+| `PORT` | Web server port (default `7777`) | Optional |
+
+Only `LLM_API_KEY` is required. Everything else is opt-in.
+
+</details>
 
 ---
 
 ## 🗺️ Roadmap
 
-Where Nexus is headed next:
+Where the mission takes us next:
 
 1. 📱 **Every device** — full iOS, Windows, and desktop Linux clients
-2. ⚡ **Smarter runtimes** — faster on-device inference with hardware-aware agents that pick the best model and quantization automatically, in the spirit of **[Claude Code](https://www.anthropic.com/claude-code)**, **[OpenClaw](https://github.com/openclaw/openclaw)** — but running on *your* hardware
+2. ⚡ **Smarter runtimes** — faster on-device inference with hardware-aware agents that pick the best model and quantization automatically, in the spirit of [Claude Code](https://www.anthropic.com/claude-code), but running on *your* hardware
 3. 🌐 **Federated fleet** — one control plane across hundreds of user devices, with privacy-first fine-tuning that never leaves the device
 
 Follow along in [Issues](https://github.com/qpiai/nexus/issues) and [Discussions](https://github.com/qpiai/nexus/discussions).
 
 ---
 
-## 📦 Components
+## 🤝 Contributing · ⭐ Star · 📜 License
 
-### Web Platform — `llm-integration-platform/`
-
-The core of Nexus: a Next.js 14 app with 15 pages, 47 API routes, and 19 Python scripts handling the ML side.
-
-**Highlights:** 4-agent AI workflow on Gemini 2.0 Flash + Tavily · 100+ model catalog (LLaMA 3, Phi-4, Qwen, Mistral, DeepSeek-R1, Gemma 3…) · 6 quantization methods · LoRA/QLoRA fine-tuning · YOLO vision training with 6 export formats · real-time chat with quantized models · device management with QR pairing · live system telemetry · JWT auth + optional Google OAuth.
-
-**Tech stack:** Next.js 14 · React 18 · TypeScript · Tailwind · Python · PyTorch · Transformers · llama.cpp
-
----
-
-### 🐍 Python Environments
-
-Different quantization methods need different package versions, so each runs in its own isolated venv.
-
-| Venv | Size | Packages | Used by |
-|---|---|---|---|
-| `gguf` | ~1 GB | transformers<5, huggingface-hub, gguf, torch | GGUF quantization + inference |
-| `awq` | ~1 GB | autoawq, transformers>=5, accelerate | AWQ quantization |
-| `gptq` | ~1 GB | auto-gptq, transformers>=5, datasets | GPTQ quantization |
-
-**Docker** installs them automatically via `SETUP_VENVS`. **Local dev:**
-
-```bash
-cd llm-integration-platform
-bash scripts/setup_venvs.sh gguf       # pip-based, one method
-bash scripts/setup_venvs.sh            # pip-based, all methods
-bash scripts/setup_all_venvs.sh gguf   # uv-based (faster, needs uv)
-```
-
----
-
-### 🤖 Android — `nexus-android-v7/`
-
-Kotlin app with an on-device agent, inference, and vision. ReAct-style agent with 9 tools (llama.cpp JNI) · VLM chat with image attachment · on-device TFLite object detection + segmentation (YOLO) · server-side vision fallback · confidence / IoU controls · QR code login, email/password auth, offline mode.
-
-```bash
-cd nexus-android-v7/app/src/main/cpp
-git clone https://github.com/ggerganov/llama.cpp
-cd ../../../../..
-./gradlew assembleDebug
-```
-
----
-
-### 📱 iOS / macOS — `nexus-ios/`
-
-A native Swift 6 client with two targets:
-
-| Target | What it does |
-|---|---|
-| **NexusApp** | Device monitoring, vision inference, chat with server-side models |
-| **NexusChat** | On-device LLM inference using MLX, with 4 pre-configured models |
-
-```bash
-open nexus-ios/NexusApp/NexusApp.xcodeproj
-# Requires macOS + Apple Silicon for MLX
-```
-
----
-
-### 💻 Desktop — `nexus-desktop-v2/`
-
-Electron desktop app with local inference via `node-llama-cpp`.
-
-```bash
-cd nexus-desktop-v2
-npm install
-npm start                     # dev
-npm run build                 # build for all platforms
-```
-
----
-
-### 🎯 Flutter — `nexus_mobile/`
-
-Cross-platform mobile client built with Flutter + Riverpod + Hive.
-
-```bash
-cd nexus_mobile
-flutter pub get
-flutter build apk             # Android
-flutter build ios             # iOS
-```
-
----
-
-## 💻 Environment Requirements
-
-| Component | Requirements |
-|---|---|
-| Docker deployment | Docker 20+, Docker Compose v2 |
-| Local web platform | Node.js 18+, Python 3.10+, cmake |
-| iOS | macOS, Xcode 15+, Apple Silicon (for MLX) |
-| Android | Android Studio, SDK 35, NDK 27, CMake |
-| Flutter | Flutter SDK 3.16+, Dart 3.2+ |
-| Desktop | Node.js 18+ |
-
----
-
-## 🧪 Testing
-
-```bash
-cd llm-integration-platform
-npm test                      # all tests
-npm run lint                  # ESLint
-npm run build                 # production build
-```
-
----
-
-## 🤝 Contributing
-
-We'd love your help. Fork the repo, build something, open a PR — see [CONTRIBUTING.md](CONTRIBUTING.md) for the details. Drive-by documentation fixes count too.
-
----
-
-## ⭐ Star
-
-If you find Nexus useful, please give it a star — it genuinely helps us reach more people who could benefit.
-
----
-
-## 🌐 More from QpiAI
-
-Check out our other open-source projects at **[github.com/qpiai](https://github.com/qpiai)**.
-
----
-
-## 📜 License
+Fork, build, PR — see [CONTRIBUTING.md](CONTRIBUTING.md). Docs fixes count too.
+If Nexus helps you, a ⭐ helps us reach more people who could benefit.
+Check out our other projects at **[github.com/qpiai](https://github.com/qpiai)**.
 
 Copyright 2026 QpiAI. Licensed under the [Apache License 2.0](LICENSE).
