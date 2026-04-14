@@ -15,12 +15,10 @@
 
 ---
 
-## 🎯 Mission
+## 🎯 Our Mission
 
 > **Democratize AI by empowering every device.**
 > Any model, any hardware — from a cloud GPU to the phone in your pocket — deployed with one workflow, no cloud lock-in.
-
-Every section below is a way Nexus delivers that mission.
 
 ---
 
