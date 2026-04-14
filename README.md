@@ -203,7 +203,13 @@ Where the mission takes us next:
 2. ⚡ **Smarter runtimes** — faster on-device inference with hardware-aware agents that pick the best model and quantization automatically, in the spirit of [Claude Code](https://www.anthropic.com/claude-code), but running on *your* hardware
 3. 🌐 **Federated fleet** — one control plane across hundreds of user devices, with privacy-first fine-tuning that never leaves the device
 
-Follow along in [Issues](https://github.com/qpiai/nexus/issues) and [Discussions](https://github.com/qpiai/nexus/discussions).
+Follow along in [Issues](https://github.com/qpiai/nexus/issues).
+
+---
+
+## 🙏 Thanks
+
+Nexus stands on the shoulders of giants. Grateful to [llama.cpp](https://github.com/ggml-org/llama.cpp), [AutoAWQ](https://github.com/casper-hansen/AutoAWQ), [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ), [MLX](https://github.com/ml-explore/mlx), [BitNet](https://github.com/microsoft/BitNet), [Unsloth](https://github.com/unslothai/unsloth), [Hugging Face 🤗](https://huggingface.co/), [PyTorch](https://pytorch.org/), [Ultralytics](https://github.com/ultralytics/ultralytics), [Anthropic](https://www.anthropic.com/), [Google Gemini](https://ai.google.dev/), and the open-source community that makes this possible — thank you.
 
 ---
 
