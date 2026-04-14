@@ -7,11 +7,11 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 
-<a href="https://github.com/qpiai/nexus/releases/download/nexus-demo-v1/NexusV7.mp4">
+<a href="llm-integration-platform/public/NexusV7_small.mp4">
   <img src="llm-integration-platform/public/NexusV7.gif" alt="Nexus demo — click to watch with audio" width="100%" />
 </a>
 
-▶ **[Watch with audio](https://github.com/qpiai/nexus/releases/download/nexus-demo-v1/NexusV7.mp4)** (1 min · 1080p)
+▶ **[Watch with audio](llm-integration-platform/public/NexusV7_small.mp4)** (1 min · 720p)
 
 ---
 
