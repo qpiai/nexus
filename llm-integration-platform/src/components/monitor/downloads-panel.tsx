@@ -174,11 +174,9 @@ function formatSize(mb: number): string {
   return `${mb} MB`;
 }
 
-/**
- * Probes each release URL with HEAD to find which binaries are actually
- * uploaded. Missing builds (e.g. iOS still pending) get greyed out with a
- * tooltip instead of giving the user a 404.
- */
+// Probe release URLs via the Next.js server so we bypass browser CORS — GitHub
+// Releases 302-redirect to Azure Blob and neither endpoint emits CORS headers,
+// so a direct client-side HEAD would always fail.
 function useAvailability(items: DownloadItem[]) {
   const [available, setAvailable] = useState<Set<string>>(new Set());
   const [checked, setChecked] = useState(false);
@@ -186,25 +184,22 @@ function useAvailability(items: DownloadItem[]) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const results = await Promise.all(
-        items.map(async (item) => {
-          try {
-            // 'no-cors' ⇒ opaque response; we only need the network round-trip
-            // not to throw. GitHub Releases serve via 302 → S3, both succeed
-            // for existing files and fail for missing ones.
-            const res = await fetch(downloadUrl(item), {
-              method: 'HEAD',
-              redirect: 'follow',
-              mode: 'cors',
-            });
-            return [item.id, res.ok] as const;
-          } catch {
-            return [item.id, false] as const;
-          }
-        }),
-      );
+      const urls = items.map(downloadUrl);
+      let map: Record<string, boolean> = {};
+      try {
+        const res = await fetch('/api/downloads/check', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ urls }),
+        });
+        if (res.ok) map = await res.json();
+      } catch {
+        // If the proxy itself is unreachable, leave every item unavailable —
+        // better to show "Build pending" than a 404 on click.
+      }
       if (cancelled) return;
-      setAvailable(new Set(results.filter(([, ok]) => ok).map(([id]) => id)));
+      const ok = new Set(items.filter((it) => map[downloadUrl(it)]).map((it) => it.id));
+      setAvailable(ok);
       setChecked(true);
     })();
     return () => {
